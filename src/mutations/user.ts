@@ -5,9 +5,8 @@ import { api } from '../services/api';
 const createOrUpdateUser = async (user: User) => {
   const response = await api.post('/users/auth0-login', user);
   if (response.status !== 200) {
-    throw new Error();
+    throw new Error('An error occurred while logging in');
   }
-  return response.data;
 };
 
 export const useCreateOrUpdateUserMutation = () =>
