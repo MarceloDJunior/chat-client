@@ -41,5 +41,14 @@ export const LoginResponse = () => {
     }
   }, [isLoading, error]);
 
-  return <div>Loading...</div>;
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+      }}
+    >
+      Loading...
+    </div>
+  );
 };

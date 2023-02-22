@@ -1,7 +1,12 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import classNames from 'classnames';
+import io, { Socket } from 'socket.io-client';
 import { LoginButton } from '../../components/login-button';
 import { LogoutButton } from '../../components/logout-button';
+import { WS_URL } from '../../config/environment';
+import { ACCESS_TOKEN } from '../../constants/cookies';
+import { LAST_CONTACT_ID } from '../../constants/session';
+import { CookiesHelper } from '../../helpers/cookies';
 import { useGetContactsQuery } from '../../queries/contacts';
 import { useGetUser } from '../../queries/user';
 import PlaceholderImage from '../../assets/profile-placeholder.jpg';
@@ -12,6 +17,10 @@ import {
   useSendMessageMutation,
 } from '../../mutations/messages';
 import { Message } from '../../models/message';
+
+let socket: Socket;
+
+const initialContactId = sessionStorage.getItem(LAST_CONTACT_ID);
 
 export const Home = () => {
   const { data: user, isLoading } = useGetUser();
@@ -50,6 +59,7 @@ export const Home = () => {
         text,
       };
       await sendMessage(message);
+      socket && socket.emit('sendMessage', JSON.stringify(message));
       setText('');
       addNewMessage(message);
     } catch (err) {
@@ -73,12 +83,40 @@ export const Home = () => {
     if (currentContact) {
       setMessages([]);
       getInitialMessages(currentContact.id);
+      sessionStorage.setItem(LAST_CONTACT_ID, currentContact.id.toString());
     }
   }, [currentContact]);
 
   useEffect(() => {
+    socket = io(WS_URL, {
+      multiplex: true,
+      transports: ['websocket'],
+      query: {
+        accessToken: CookiesHelper.get(ACCESS_TOKEN),
+      },
+    });
+
+    socket.on('messageReceived', (payload: string) => {
+      const message: Message = JSON.parse(payload);
+      console.log('MEssageReceived', message);
+      addNewMessage(message);
+    });
+  }, []);
+
+  useEffect(() => {
     scrollToRecentMessage();
   }, [messages]);
+
+  useEffect(() => {
+    if (contacts && !currentContact && initialContactId) {
+      const initialContact = contacts.find(
+        (contact) => contact.id === Number(initialContactId),
+      );
+      if (initialContact) {
+        setCurrentContact(initialContact);
+      }
+    }
+  }, [contacts]);
 
   const orderedMessages = useMemo(() => {
     const orderedMessages = [...messages];
@@ -87,7 +125,7 @@ export const Home = () => {
   }, [messages]);
 
   if (isLoading) {
-    return <div className={styles.container}>Loading ...</div>;
+    return <div className={styles.center}>Loading ...</div>;
   }
 
   return user ? (
@@ -158,7 +196,7 @@ export const Home = () => {
       </main>
     </div>
   ) : (
-    <div className={styles.container}>
+    <div className={styles.center}>
       <LoginButton />
     </div>
   );
