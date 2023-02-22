@@ -88,19 +88,21 @@ export const Home = () => {
   }, [currentContact]);
 
   useEffect(() => {
-    socket = io(WS_URL, {
-      multiplex: true,
-      transports: ['websocket'],
-      query: {
-        accessToken: CookiesHelper.get(ACCESS_TOKEN),
-      },
-    });
+    if (!socket) {
+      socket = io(WS_URL, {
+        multiplex: true,
+        transports: ['websocket'],
+        query: {
+          accessToken: CookiesHelper.get(ACCESS_TOKEN),
+        },
+      });
 
-    socket.on('messageReceived', (payload: string) => {
-      const message: Message = JSON.parse(payload);
-      console.log('MEssageReceived', message);
-      addNewMessage(message);
-    });
+      socket.on('messageReceived', (payload: string) => {
+        const message: Message = JSON.parse(payload);
+        console.log('MEssageReceived', message);
+        addNewMessage(message);
+      });
+    }
   }, []);
 
   useEffect(() => {
