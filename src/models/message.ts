@@ -4,5 +4,5 @@ export type Message = {
   text: string;
   from: User;
   to: User;
-  date: Date;
+  dateTime: Date;
 };

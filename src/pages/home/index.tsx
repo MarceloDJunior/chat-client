@@ -17,6 +17,7 @@ import {
   useSendMessageMutation,
 } from '../../mutations/messages';
 import { Message } from '../../models/message';
+import { DateHelper } from '../../helpers/date';
 
 let socket: Socket;
 
@@ -33,6 +34,7 @@ export const Home = () => {
   const { mutateAsync: sendMessage, isLoading: isSending } =
     useSendMessageMutation();
   const messagesRef = useRef<HTMLDivElement>(null);
+  let lastMessageDate: string;
 
   const openChat = (user: User) => {
     setCurrentContact(user);
@@ -55,7 +57,7 @@ export const Home = () => {
       const message: Message = {
         from: user,
         to: currentContact,
-        date: new Date(),
+        dateTime: new Date(),
         text,
       };
       await sendMessage(message);
@@ -168,17 +170,35 @@ export const Home = () => {
               <div className={styles.name}>{currentContact.name}</div>
             </div>
             <div className={styles.messages} ref={messagesRef}>
-              {isLoadingMessages
-                ? 'Loading...'
-                : orderedMessages?.map((message) => (
-                    <div
-                      className={classNames(styles['message-container'], {
-                        [styles.sent]: message.from.id === user.id,
-                      })}
-                    >
-                      <div className={styles.message}>{message.text}</div>
-                    </div>
-                  ))}
+              {isLoadingMessages ? (
+                <div className={styles.center}>Loading...</div>
+              ) : (
+                orderedMessages?.map((message) => {
+                  const currentDate = DateHelper.formatDate(message.dateTime);
+                  const isDifferentFromPrevious =
+                    currentDate !== lastMessageDate;
+                  lastMessageDate = currentDate;
+                  return (
+                    <>
+                      {isDifferentFromPrevious && (
+                        <div className={styles.date}>{currentDate}</div>
+                      )}
+                      <div
+                        className={classNames(styles['message-container'], {
+                          [styles.sent]: message.from.id === user.id,
+                        })}
+                      >
+                        <div className={styles.message}>
+                          <div className={styles.text}>{message.text}</div>
+                          <div className={styles.time}>
+                            {DateHelper.formatHoursMinutes(message.dateTime)}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })
+              )}
             </div>
             <form onSubmit={handleSendMessage} className={styles['input-box']}>
               <input
