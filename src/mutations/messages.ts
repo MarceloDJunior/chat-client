@@ -12,7 +12,7 @@ const getMessages = async (contactId: number): Promise<Message[]> => {
 
 export const useGetMessagesMutation = () => useMutation(getMessages);
 
-const sendMessage = async (message: Message) => {
+const sendMessage = async (message: Message): Promise<number> => {
   const response = await api.post('/messages/send', {
     fromId: message.from.id,
     toId: message.to.id,
@@ -21,6 +21,7 @@ const sendMessage = async (message: Message) => {
   if (response.status !== 201) {
     throw new Error('An error occurred while sending message');
   }
+  return response.data.id;
 };
 
 export const useSendMessageMutation = () =>

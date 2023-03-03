@@ -1,4 +1,11 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  FormEvent,
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import classNames from 'classnames';
 import io, { Socket } from 'socket.io-client';
 import { LoginButton } from '../../components/login-button';
@@ -25,9 +32,10 @@ const initialContactId = sessionStorage.getItem(LAST_CONTACT_ID);
 
 export const Home = () => {
   const { data: user, isLoading } = useGetUser();
-  const { data: contacts } = useGetContactsQuery();
+  const { data: contacts, refetch: refetchContacts } = useGetContactsQuery();
   const [currentContact, setCurrentContact] = useState<User>();
   const [text, setText] = useState<string>('');
+  const [onlineUserIds, setOnlineUserIds] = useState<number[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const { mutateAsync: getMessages, isLoading: isLoadingMessages } =
     useGetMessagesMutation();
@@ -60,7 +68,8 @@ export const Home = () => {
         dateTime: new Date(),
         text,
       };
-      await sendMessage(message);
+      const insertedId = await sendMessage(message);
+      message.id = insertedId;
       socket && socket.emit('sendMessage', JSON.stringify(message));
       setText('');
       addNewMessage(message);
@@ -101,8 +110,16 @@ export const Home = () => {
 
       socket.on('messageReceived', (payload: string) => {
         const message: Message = JSON.parse(payload);
-        console.log('MEssageReceived', message);
-        addNewMessage(message);
+        console.log('Message Received', message);
+        if (!messages.find((msg) => msg.id === message.id)) {
+          addNewMessage(message);
+        }
+      });
+
+      socket.on('connectedUsers', (payload: string) => {
+        console.log('Connected Users', payload);
+        refetchContacts();
+        setOnlineUserIds(JSON.parse(payload) as number[]);
       });
     }
   }, []);
@@ -128,6 +145,23 @@ export const Home = () => {
     return orderedMessages;
   }, [messages]);
 
+  const contactsWithStatus = useMemo(() => {
+    if (!contacts) {
+      return [];
+    }
+
+    const contactsWithStatus: User[] = contacts.map((contact) => ({
+      ...contact,
+      status: onlineUserIds.includes(contact.id) ? 'online' : 'offline',
+    }));
+
+    const orderedContacts = contactsWithStatus?.sort((c1) =>
+      c1.status === 'online' ? -1 : 1,
+    );
+
+    return orderedContacts;
+  }, [contacts, onlineUserIds]);
+
   if (isLoading) {
     return <div className={styles.center}>Loading ...</div>;
   }
@@ -145,14 +179,27 @@ export const Home = () => {
         </div>
         <div className={styles.contacts}>
           <ul>
-            {contacts?.map((contact) => (
-              <li role="button" onClick={() => openChat(contact)}>
+            {contactsWithStatus.map((contact) => (
+              <li
+                key={contact.id}
+                role="button"
+                onClick={() => openChat(contact)}
+              >
                 <img
                   src={contact.picture ?? PlaceholderImage}
                   alt="Picture"
                   className={styles.picture}
                 />
-                <div className={styles.name}>{contact.name}</div>
+                <div>
+                  <div className={styles.name}>{contact.name}</div>
+                  <span
+                    className={classNames(styles.status, {
+                      [styles.online]: contact.status === 'online',
+                    })}
+                  >
+                    {contact.status}
+                  </span>
+                </div>
               </li>
             ))}
           </ul>
@@ -179,7 +226,9 @@ export const Home = () => {
                     currentDate !== lastMessageDate;
                   lastMessageDate = currentDate;
                   return (
-                    <>
+                    <Fragment
+                      key={`${message.id}-${message.dateTime.toString()}`}
+                    >
                       {isDifferentFromPrevious && (
                         <div className={styles.date}>{currentDate}</div>
                       )}
@@ -195,7 +244,7 @@ export const Home = () => {
                           </div>
                         </div>
                       </div>
-                    </>
+                    </Fragment>
                   );
                 })
               )}

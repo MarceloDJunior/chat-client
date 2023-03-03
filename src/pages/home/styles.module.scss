@@ -57,6 +57,17 @@
           &:hover {
             background-color: rgba(100, 100, 100, 0.179);
           }
+
+          .status {
+            color: rgb(147, 147, 147);
+            font-size: 14px;
+            text-transform: capitalize;
+
+            &.online {
+              font-weight: bold;
+              color: rgb(19, 139, 0);
+            }
+          }
         }
       }
     }
