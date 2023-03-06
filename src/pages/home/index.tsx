@@ -1,13 +1,14 @@
 import {
   FormEvent,
   Fragment,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
 import classNames from 'classnames';
-import io, { Socket } from 'socket.io-client';
+import io from 'socket.io-client';
 import { LoginButton } from '../../components/login-button';
 import { LogoutButton } from '../../components/logout-button';
 import { WS_URL } from '../../config/environment';
@@ -17,7 +18,6 @@ import { CookiesHelper } from '../../helpers/cookies';
 import { useGetContactsQuery } from '../../queries/contacts';
 import { useGetUser } from '../../queries/user';
 import PlaceholderImage from '../../assets/profile-placeholder.jpg';
-import { User } from '../../models/user';
 import styles from './styles.module.scss';
 import {
   useGetMessagesMutation,
@@ -25,17 +25,27 @@ import {
 } from '../../mutations/messages';
 import { Message } from '../../models/message';
 import { DateHelper } from '../../helpers/date';
+import { Contact } from '../../models/contact';
 
-let socket: Socket;
+const socket = io(WS_URL, {
+  multiplex: true,
+  transports: ['websocket'],
+  query: {
+    accessToken: CookiesHelper.get(ACCESS_TOKEN),
+  },
+});
+let lastMessageId: number;
 
 const initialContactId = sessionStorage.getItem(LAST_CONTACT_ID);
 
 export const Home = () => {
   const { data: user, isLoading } = useGetUser();
-  const { data: contacts, refetch: refetchContacts } = useGetContactsQuery();
-  const [currentContact, setCurrentContact] = useState<User>();
+  const { data: contactsFromServer, refetch: refetchContacts } =
+    useGetContactsQuery();
+  const [currentContact, setCurrentContact] = useState<Contact>();
   const [text, setText] = useState<string>('');
   const [onlineUserIds, setOnlineUserIds] = useState<number[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>();
   const [messages, setMessages] = useState<Message[]>([]);
   const { mutateAsync: getMessages, isLoading: isLoadingMessages } =
     useGetMessagesMutation();
@@ -44,8 +54,9 @@ export const Home = () => {
   const messagesRef = useRef<HTMLDivElement>(null);
   let lastMessageDate: string;
 
-  const openChat = (user: User) => {
-    setCurrentContact(user);
+  const openChat = (contact: Contact) => {
+    setCurrentContact(contact);
+    resetContactNewMessages(contact.id);
   };
 
   const addNewMessage = (message: Message) => {
@@ -85,6 +96,43 @@ export const Home = () => {
     }
   };
 
+  const handleNewMessage = useCallback(
+    (message: Message) => {
+      if (!message.id || lastMessageId === message.id) {
+        return;
+      }
+      lastMessageId = message.id;
+      if (currentContact?.id === message.from.id) {
+        addNewMessage(message);
+      } else {
+        incrementContactNewMessages(message.from.id);
+      }
+    },
+    [currentContact?.id],
+  );
+
+  const incrementContactNewMessages = (contactId: number) => {
+    setContacts((prevContacts) => {
+      return prevContacts?.map((contact) => {
+        if (contact.id === contactId) {
+          return { ...contact, newMessages: (contact.newMessages ?? 0) + 1 };
+        }
+        return contact;
+      });
+    });
+  };
+
+  const resetContactNewMessages = (contactId: number) => {
+    setContacts((prevContacts) => {
+      return prevContacts?.map((contact) => {
+        if (contact.id === contactId) {
+          return { ...contact, newMessages: 0 };
+        }
+        return contact;
+      });
+    });
+  };
+
   useEffect(() => {
     const getInitialMessages = async (contactId: number) => {
       const messages = await getMessages(contactId);
@@ -96,33 +144,27 @@ export const Home = () => {
       getInitialMessages(currentContact.id);
       sessionStorage.setItem(LAST_CONTACT_ID, currentContact.id.toString());
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentContact]);
 
   useEffect(() => {
-    if (!socket) {
-      socket = io(WS_URL, {
-        multiplex: true,
-        transports: ['websocket'],
-        query: {
-          accessToken: CookiesHelper.get(ACCESS_TOKEN),
-        },
-      });
+    socket.on('messageReceived', (payload: string) => {
+      const message: Message = JSON.parse(payload);
+      console.log('Message Received', message);
+      handleNewMessage(message);
+    });
 
-      socket.on('messageReceived', (payload: string) => {
-        const message: Message = JSON.parse(payload);
-        console.log('Message Received', message);
-        if (!messages.find((msg) => msg.id === message.id)) {
-          addNewMessage(message);
-        }
-      });
+    socket.on('connectedUsers', (payload: string) => {
+      console.log('Connected Users', payload);
+      refetchContacts();
+      setOnlineUserIds(JSON.parse(payload) as number[]);
+    });
 
-      socket.on('connectedUsers', (payload: string) => {
-        console.log('Connected Users', payload);
-        refetchContacts();
-        setOnlineUserIds(JSON.parse(payload) as number[]);
-      });
-    }
-  }, []);
+    return () => {
+      socket.off('messageReceived');
+      socket.off('connectedUsers');
+    };
+  }, [handleNewMessage, refetchContacts]);
 
   useEffect(() => {
     scrollToRecentMessage();
@@ -137,7 +179,13 @@ export const Home = () => {
         setCurrentContact(initialContact);
       }
     }
-  }, [contacts]);
+  }, [contacts, currentContact]);
+
+  useEffect(() => {
+    if (contactsFromServer) {
+      setContacts(contactsFromServer);
+    }
+  }, [contactsFromServer]);
 
   const orderedMessages = useMemo(() => {
     const orderedMessages = [...messages];
@@ -150,7 +198,7 @@ export const Home = () => {
       return [];
     }
 
-    const contactsWithStatus: User[] = contacts.map((contact) => ({
+    const contactsWithStatus: Contact[] = contacts.map((contact) => ({
       ...contact,
       status: onlineUserIds.includes(contact.id) ? 'online' : 'offline',
     }));
@@ -191,7 +239,14 @@ export const Home = () => {
                   className={styles.picture}
                 />
                 <div>
-                  <div className={styles.name}>{contact.name}</div>
+                  <div className={styles.name}>
+                    {contact.name}{' '}
+                    {!!contact.newMessages && (
+                      <span className={styles['new-messages']}>
+                        {contact.newMessages}
+                      </span>
+                    )}
+                  </div>
                   <span
                     className={classNames(styles.status, {
                       [styles.online]: contact.status === 'online',

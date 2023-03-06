@@ -1,5 +1,5 @@
 import { useQuery } from 'react-query';
-import { User } from '../models/user';
+import { Contact } from '../models/contact';
 import { api } from '../services/api';
 
 const getContacts = async () => {
@@ -11,4 +11,4 @@ const getContacts = async () => {
 };
 
 export const useGetContactsQuery = () =>
-  useQuery<User[]>('getContacts', getContacts);
+  useQuery<Contact[]>('getContacts', getContacts);
