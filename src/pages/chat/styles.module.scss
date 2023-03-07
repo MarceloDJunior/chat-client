@@ -12,84 +12,6 @@
   .sidebar {
     flex: 1;
     border: 1px solid rgba(189, 189, 189, 0.179);
-
-    .header {
-      border-bottom: 1px solid rgba(189, 189, 189, 0.179);
-      display: flex;
-      align-items: center;
-      padding: 28px 20px 20px;
-
-      .picture {
-        margin-right: 12px;
-        width: 90px;
-        height: 90px;
-      }
-
-      h2 {
-        font-size: 18px;
-        line-height: 20px;
-        margin: 2px 0;
-        padding: 0;
-      }
-
-      p {
-        margin: 0 0 8px;
-      }
-    }
-
-    .contacts {
-
-      ul {
-        list-style: none;
-        padding: 0;
-
-        li {
-          display: flex;
-          align-items: center;
-          padding: 12px 20px;
-
-          .picture {
-            margin-right: 12px;
-          }
-
-          transition: background-color 0.2s ease;
-
-          &:hover {
-            background-color: rgba(100, 100, 100, 0.179);
-          }
-
-          .status {
-            color: rgb(147, 147, 147);
-            font-size: 14px;
-            text-transform: capitalize;
-
-            &.online {
-              font-weight: bold;
-              color: rgb(19, 139, 0);
-            }
-          }
-
-          .name {
-            display: flex;
-            align-items: center;
-
-            .new-messages {
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              min-width: 18px;
-              height: 18px;
-              font-size: 11px;
-              background-color: rgba(62, 105, 153, 1);
-              color: #fff;
-              border-radius: 18px;
-              margin-left: 10px;
-              padding: 4px;
-            }
-          }
-        }
-      }
-    }
   }
 
   .main-content {
@@ -99,81 +21,11 @@
     justify-content: center;
     text-align: center;
 
-    .contact-info {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      padding: 24px 20px;
-      border-bottom: 1px solid rgba(189, 189, 189, 0.179);
-
-      .picture {
-        margin-right: 12px;
-      }
-    }
-
     .messages {
       width: 100%;
       flex: 1 1 0;
       overflow: auto;
       padding: 20px;
-
-      .date {
-        margin: 30px auto;
-        background-color: rgba(255, 255, 255, 0.1);
-        width: fit-content;
-        padding: 6px 12px;
-        border-radius: 14px;
-      }
-
-      .message-container {
-        display: flex;
-        justify-content: flex-start;
-        padding: 10px 0;
-
-        .message {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          background-color: rgb(178, 185, 252);
-          color: #000;
-          border-radius: 20px;
-          padding: 10px 14px;
-          min-width: 100px;
-
-          .time {
-            font-size: 11px;
-            font-weight: bold;
-            margin-top: 2px;
-          }
-        }
-
-        .message-status {
-          display: flex;
-          justify-content: flex-end;
-        }
-
-        &.sent {
-          justify-content: flex-end;
-
-          .message {
-            align-items: flex-end;
-            background-color: #ccc;
-          }
-        }
-      }
-    }
-
-    .input-box {
-      display: flex;
-      padding: 20px;
-
-      input {
-        flex: 1;
-        margin-right: 16px;
-        padding: 20px 12px;
-        font-size: 16px;
-        border-radius: 12px;
-      }
     }
   }
 }
