@@ -6,4 +6,5 @@ export type Message = {
   from: User;
   to: User;
   dateTime: Date;
+  read: boolean;
 };

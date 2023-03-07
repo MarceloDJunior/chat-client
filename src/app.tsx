@@ -6,6 +6,7 @@ import {
   AUTH0_CLIENT_ID,
   AUTH0_DOMAIN,
 } from './config/environment';
+import { WebSocketProvider } from './context/websocket-context';
 import { RouterProvider } from './router';
 
 const queryClient = new QueryClient();
@@ -22,7 +23,9 @@ const App = () => {
         }}
       >
         <CookiesProvider>
-          <RouterProvider />
+          <WebSocketProvider>
+            <RouterProvider />
+          </WebSocketProvider>
         </CookiesProvider>
       </Auth0Provider>
     </QueryClientProvider>

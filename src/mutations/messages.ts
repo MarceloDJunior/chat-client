@@ -26,3 +26,13 @@ const sendMessage = async (message: Message): Promise<number> => {
 
 export const useSendMessageMutation = () =>
   useMutation('sendMessage', sendMessage);
+
+const updateRead = async (contactId: number): Promise<void> => {
+  const response = await api.get(`/messages/${contactId}/update-read`);
+  if (response.status !== 200) {
+    throw new Error('An error occurred while updating message');
+  }
+  return response.data.id;
+};
+
+export const useUpdateReadMutation = () => useMutation(updateRead);
