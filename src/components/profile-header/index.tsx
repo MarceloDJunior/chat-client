@@ -1,5 +1,6 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { ACCESS_TOKEN } from '../../constants/cookies';
+import { useWebSocketContext } from '../../context/websocket-context';
 import { CookiesHelper } from '../../helpers/cookies';
 import { User } from '../../models/user';
 import styles from './styles.module.scss';
@@ -10,9 +11,11 @@ type ProfileHeaderProps = {
 
 export const ProfileHeader = ({ user }: ProfileHeaderProps) => {
   const { logout } = useAuth0();
+  const { socket } = useWebSocketContext();
 
   const handleLogout = () => {
     CookiesHelper.remove(ACCESS_TOKEN);
+    socket?.disconnect();
     logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
