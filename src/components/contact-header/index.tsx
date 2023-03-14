@@ -1,6 +1,6 @@
 import { Contact } from '../../models/contact';
 import PlaceholderImage from '../../assets/images/profile-placeholder.jpg';
-import styles from './styles.module.scss';
+import * as S from './styles';
 
 type ContactHeaderProps = {
   contact: Contact;
@@ -8,13 +8,9 @@ type ContactHeaderProps = {
 
 export const ContactHeader = ({ contact }: ContactHeaderProps) => {
   return (
-    <div className={styles.container}>
-      <img
-        src={contact.picture ?? PlaceholderImage}
-        alt="Picture"
-        className={styles.picture}
-      />
-      <div className={styles.name}>{contact.name}</div>
-    </div>
+    <S.Container>
+      <S.Picture src={contact.picture ?? PlaceholderImage} alt="Picture" />
+      <div>{contact.name}</div>
+    </S.Container>
   );
 };

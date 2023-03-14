@@ -9,7 +9,6 @@ import {
 } from '../../mutations/messages';
 import { Message } from '../../models/message';
 import { Contact } from '../../models/contact';
-import styles from './styles.module.scss';
 import { useWebSocketContext } from '../../context/websocket-context';
 import { ProfileHeader } from '../../components/profile-header';
 import { ContactList } from '../../components/contact-list';
@@ -17,6 +16,7 @@ import { ContactHeader } from '../../components/contact-header';
 import { MessageList } from '../../components/message-list';
 import { SendMessageField } from '../../components/send-message-field';
 import { CookiesHelper } from '../../helpers/cookies';
+import * as S from './styles';
 
 let lastMessageId: number;
 
@@ -210,29 +210,26 @@ export const Chat = () => {
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.sidebar}>
+    <S.Container>
+      <S.Sidebar>
         <ProfileHeader user={user} />
         <ContactList
           contacts={contacts ?? []}
           onlineUserIds={onlineUserIds}
           onContactClick={openChat}
         />
-      </div>
-      <main
-        className={styles['main-content']}
-        onMouseEnter={updateMessagesRead}
-      >
+      </S.Sidebar>
+      <S.MainContent onMouseEnter={updateMessagesRead}>
         {currentContact ? (
           <>
             <ContactHeader contact={currentContact} />
-            <div className={styles.messages} ref={messagesRef}>
+            <S.Messages ref={messagesRef}>
               {isLoadingMessages ? (
-                <div className={styles.center}>Loading...</div>
+                <S.Center>Loading...</S.Center>
               ) : (
                 <MessageList messages={messages} myUser={user} />
               )}
-            </div>
+            </S.Messages>
             <SendMessageField
               onSubmit={handleSendMessage}
               isSending={isSending}
@@ -241,7 +238,7 @@ export const Chat = () => {
         ) : (
           <h3>Select a user to start chatting</h3>
         )}
-      </main>
-    </div>
+      </S.MainContent>
+    </S.Container>
   );
 };
