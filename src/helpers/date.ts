@@ -6,6 +6,6 @@ export class DateHelper {
   }
 
   static formatHoursMinutes(date: Date): string {
-    return moment(date).format('hh:mm A');
+    return moment(date).format('hh:mm');
   }
 }

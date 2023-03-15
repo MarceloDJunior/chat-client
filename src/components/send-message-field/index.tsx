@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react';
-import * as S from './styles';
+import styles from './styles.module.scss';
 
 type SendMessageFieldProps = {
   onSubmit: (text: string) => Promise<boolean>;
@@ -23,20 +23,18 @@ export const SendMessageField = ({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <S.Container>
-        <S.Input
-          type="text"
-          name="text"
-          onChange={(event) => setText(event.target.value)}
-          value={text}
-          readOnly={isSending}
-          onFocus={onFocus}
-        />
-        <button type="submit" disabled={isSending}>
-          Send Message
-        </button>
-      </S.Container>
+    <form onSubmit={handleSubmit} className={styles.container}>
+      <input
+        type="text"
+        name="text"
+        onChange={(event) => setText(event.target.value)}
+        value={text}
+        readOnly={isSending}
+        onFocus={onFocus}
+      />
+      <button type="submit" disabled={isSending}>
+        Send Message
+      </button>
     </form>
   );
 };

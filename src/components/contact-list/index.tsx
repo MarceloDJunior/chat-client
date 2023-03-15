@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
+import classNames from 'classnames';
 import { Contact } from '../../models/contact';
 import PlaceholderImage from '../../assets/images/profile-placeholder.jpg';
-import * as S from './styles';
+import styles from './styles.module.scss';
 
 type ContactListProps = {
   contacts: Contact[];
@@ -32,34 +33,39 @@ export const ContactList = ({
   }, [contacts, onlineUserIds]);
 
   return (
-    <div>
-      <S.ContactList>
+    <div className={styles.container}>
+      <ul>
         {contactsWithStatus.map((contact) => (
-          <S.ContactWrapper
+          <li
             key={contact.id}
             role="button"
             onClick={() => onContactClick(contact)}
           >
-            <S.Picture
+            <img
               src={contact.picture ?? PlaceholderImage}
               alt="Picture"
+              className={styles.picture}
             />
             <div>
-              <S.Name>
+              <div className={styles.name}>
                 {contact.name}{' '}
                 {!!contact.newMessages && (
-                  <S.NewMessagesCounter>
+                  <span className={styles['new-messages']}>
                     {contact.newMessages}
-                  </S.NewMessagesCounter>
+                  </span>
                 )}
-              </S.Name>
-              <S.Status isOnline={contact.status === 'online'}>
+              </div>
+              <span
+                className={classNames(styles.status, {
+                  [styles.online]: contact.status === 'online',
+                })}
+              >
                 {contact.status}
-              </S.Status>
+              </span>
             </div>
-          </S.ContactWrapper>
+          </li>
         ))}
-      </S.ContactList>
+      </ul>
     </div>
   );
 };
