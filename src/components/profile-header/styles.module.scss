@@ -1,13 +1,12 @@
 .container {
-  border-bottom: 1px solid rgba(189, 189, 189, 0.179);
   display: flex;
   align-items: center;
   padding: 28px 20px 20px;
 
   .picture {
     margin-right: 12px;
-    width: 90px;
-    height: 90px;
+    width: 76px;
+    height: 76px;
     border-radius: 50%;
   }
 
@@ -20,5 +19,11 @@
 
   p {
     margin: 0 0 8px;
+  }
+
+  button {
+    background-color: #4d38a2;
+    padding: 8px 10px;
+    margin-top: 8px;
   }
 }

@@ -18,8 +18,8 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      background-color: rgb(178, 185, 252);
-      color: #000;
+      background-color: #1c2437;
+      color: #c6c6c6;
       border-radius: 20px;
       padding: 10px 14px;
       min-width: 100px;
@@ -32,6 +32,7 @@
     }
 
     .message-status {
+      margin-top: 3px;
       display: flex;
       justify-content: flex-end;
     }
@@ -41,7 +42,8 @@
 
       .message {
         align-items: flex-end;
-        background-color: #ccc;
+        background-color: #4D38A2;
+        color: #e9e9e9;
       }
     }
   }

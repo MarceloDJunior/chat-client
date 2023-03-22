@@ -2,11 +2,16 @@
   ul {
     list-style: none;
     padding: 0;
+    overflow: auto;
+    max-height: 100%;
 
     li {
       display: flex;
       align-items: center;
       padding: 12px 20px;
+      background-color: #1c2437;
+      margin-bottom: 12px;
+      border-radius: 8px;
 
       .picture {
         margin-right: 12px;
@@ -18,7 +23,7 @@
       transition: background-color 0.2s ease;
 
       &:hover {
-        background-color: rgba(100, 100, 100, 0.179);
+        background-color: #2a3551;
       }
 
       .status {
@@ -32,24 +37,33 @@
         }
       }
 
-      .name {
+      .wrapper {
+        flex: 1;
         display: flex;
         align-items: center;
+        justify-content: space-between;
+
+
+        .name {
+          display: flex;
+          align-items: center;
+        }
 
         .new-messages {
           display: flex;
           align-items: center;
           justify-content: center;
-          min-width: 18px;
-          height: 18px;
-          font-size: 11px;
-          background-color: rgba(62, 105, 153, 1);
-          color: #fff;
-          border-radius: 18px;
+          min-width: 17px;
+          height: 17px;
+          font-size: 10px;
+          font-weight: bold;
+          background-color: #4d38a2;
+          border-radius: 16px;
           margin-left: 10px;
           padding: 4px;
         }
       }
+
     }
   }
 }

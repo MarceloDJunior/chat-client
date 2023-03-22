@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import SendIcon from '../../assets/icons/send.svg';
 import styles from './styles.module.scss';
 
 type SendMessageFieldProps = {
@@ -31,9 +32,10 @@ export const SendMessageField = ({
         value={text}
         readOnly={isSending}
         onFocus={onFocus}
+        placeholder="Write message..."
       />
       <button type="submit" disabled={isSending}>
-        Send Message
+        <img src={SendIcon} alt="Send Message" width={32} height={32} />
       </button>
     </form>
   );
