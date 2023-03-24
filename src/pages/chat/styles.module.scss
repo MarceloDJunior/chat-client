@@ -3,6 +3,10 @@
   display: flex;
   min-height: 100vh;
 
+  h3 {
+    text-align: center;
+  }
+
   .picture {
     border-radius: 50%;
     width: 50px;
