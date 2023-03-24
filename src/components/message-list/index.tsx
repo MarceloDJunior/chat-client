@@ -47,6 +47,7 @@ export const MessageList = ({ myUser, messages }: MessageListProps) => {
                     <img
                       src={message.read ? DoubleCheckIcon : CheckIcon}
                       width={message.read ? 18 : 16}
+                      height={16}
                     />
                   )}
                 </div>
