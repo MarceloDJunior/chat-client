@@ -17,6 +17,7 @@ import { ContactHeader } from '../../components/contact-header';
 import { MessageList } from '../../components/message-list';
 import { SendMessageField } from '../../components/send-message-field';
 import { CookiesHelper } from '../../helpers/cookies';
+import { Loader } from '../../components/loader';
 
 let lastMessageId: number;
 
@@ -30,8 +31,8 @@ export const Chat = () => {
   const [onlineUserIds, setOnlineUserIds] = useState<number[]>([]);
   const [contacts, setContacts] = useState<Contact[]>();
   const [messages, setMessages] = useState<Message[]>([]);
-  const { mutateAsync: getMessages, isLoading: isLoadingMessages } =
-    useGetMessagesMutation();
+  const [isLoading, setIsLoading] = useState(false);
+  const { mutateAsync: getMessages } = useGetMessagesMutation();
   const { mutateAsync: sendMessage, isLoading: isSending } =
     useSendMessageMutation();
   const { mutateAsync: updateRead } = useUpdateReadMutation();
@@ -148,6 +149,7 @@ export const Chat = () => {
     };
 
     if (currentContact) {
+      setIsLoading(true);
       setMessages([]);
       getInitialMessages(currentContact.id);
       CookiesHelper.set(LAST_CONTACT_ID, currentContact.id.toString());
@@ -186,6 +188,9 @@ export const Chat = () => {
 
   useEffect(() => {
     scrollToRecentMessage();
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
   }, [messages]);
 
   useEffect(() => {
@@ -227,12 +232,13 @@ export const Chat = () => {
           <>
             <ContactHeader contact={currentContact} />
             <div className={styles.messages} ref={messagesRef}>
-              {isLoadingMessages ? (
-                <div className={styles.center}>Loading...</div>
-              ) : (
-                <MessageList messages={messages} myUser={user} />
-              )}
+              <MessageList messages={messages} myUser={user} />
             </div>
+            {isLoading ? (
+              <div className={styles.overlay}>
+                <Loader height={46} width={60} />
+              </div>
+            ) : null}
             <SendMessageField
               onSubmit={handleSendMessage}
               isSending={isSending}

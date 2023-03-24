@@ -1,5 +1,6 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect } from 'react';
+import { Loader } from '../../components/loader';
 import { useGetUser } from '../../queries/user';
 import { Chat } from '../chat';
 import styles from './styles.module.scss';
@@ -15,7 +16,11 @@ export const Home = () => {
   }, [isLoading, loginWithRedirect, user]);
 
   if (isLoading) {
-    return <div className={styles.center}>Loading ...</div>;
+    return (
+      <div className={styles.center}>
+        <Loader />
+      </div>
+    );
   }
 
   if (user) {

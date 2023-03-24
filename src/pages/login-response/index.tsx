@@ -1,6 +1,7 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Loader } from '../../components/loader';
 import { ACCESS_TOKEN } from '../../constants/cookies';
 import { CookiesHelper } from '../../helpers/cookies';
 import { useCreateOrUpdateUserMutation } from '../../mutations/user';
@@ -39,6 +40,7 @@ export const LoginResponse = () => {
         getToken();
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, error]);
 
   return (
@@ -50,7 +52,7 @@ export const LoginResponse = () => {
         justifyContent: 'center',
       }}
     >
-      Loading...
+      <Loader />
     </div>
   );
 };
