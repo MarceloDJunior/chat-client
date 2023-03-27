@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { LAST_CONTACT_ID } from '../../constants/cookies';
-import { useGetContactsQuery } from '../../queries/contacts';
+import { useGetConversationsQuery } from '../../queries/conversations';
 import { useGetUser } from '../../queries/user';
 import {
   useGetMessagesMutation,
@@ -8,16 +8,18 @@ import {
   useUpdateReadMutation,
 } from '../../mutations/messages';
 import { Message } from '../../models/message';
-import { Contact } from '../../models/contact';
 import styles from './styles.module.scss';
 import { useWebSocketContext } from '../../context/websocket-context';
 import { ProfileHeader } from '../../components/profile-header';
-import { ContactList } from '../../components/contact-list';
+import { ConversationsList } from '../../components/conversations-list';
 import { ContactHeader } from '../../components/contact-header';
 import { MessageList } from '../../components/message-list';
 import { SendMessageField } from '../../components/send-message-field';
 import { CookiesHelper } from '../../helpers/cookies';
 import { Loader } from '../../components/loader';
+import { Conversation } from '../../models/conversation';
+import { Contact } from '../../models/contact';
+import { useGetContactsQuery } from '../../queries/contacts';
 
 let lastMessageId: number;
 
@@ -25,11 +27,12 @@ const initialContactId = CookiesHelper.get(LAST_CONTACT_ID);
 
 export const Chat = () => {
   const { data: user } = useGetUser();
-  const { data: contactsFromServer, refetch: refetchContacts } =
-    useGetContactsQuery();
+  const { data: conversationsFromServer, refetch: refetchConversations } =
+    useGetConversationsQuery();
+  const { data: contacts } = useGetContactsQuery();
   const [currentContact, setCurrentContact] = useState<Contact>();
   const [onlineUserIds, setOnlineUserIds] = useState<number[]>([]);
-  const [contacts, setContacts] = useState<Contact[]>();
+  const [conversations, setConversations] = useState<Conversation[]>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { mutateAsync: getMessages } = useGetMessagesMutation();
@@ -52,6 +55,22 @@ export const Chat = () => {
     });
   };
 
+  const addConversation = (contact: Contact, message: Message) => {
+    setConversations((prevConversations) => {
+      const conversations = [...(prevConversations ?? [])];
+      conversations.unshift({
+        contact,
+        lastMessage: message,
+        newMessages: 0,
+      });
+
+      return conversations;
+    });
+    if (contact.id === currentContact?.id) {
+      addNewMessage(message);
+    }
+  };
+
   const handleSendMessage = async (text: string): Promise<boolean> => {
     try {
       if (!user || !currentContact) {
@@ -68,7 +87,13 @@ export const Chat = () => {
       message.id = insertedId;
       socket?.emit('sendMessage', JSON.stringify(message));
       socket?.emit('messagesRead', currentContact.id);
-      addNewMessage(message);
+      if (!hasConversationWith(currentContact.id)) {
+        addConversation(currentContact, message);
+      } else {
+        addNewMessage(message);
+        updateConversationLastMessage(message);
+      }
+
       return true;
     } catch (err) {
       console.error(err);
@@ -83,39 +108,70 @@ export const Chat = () => {
     }
   };
 
+  const updateConversationLastMessage = (message: Message) => {
+    setConversations((prevConversations) => {
+      return prevConversations?.map((conversation) => {
+        if (
+          [message.from.id, message.to.id].includes(conversation.contact.id)
+        ) {
+          return { ...conversation, lastMessage: message } as Conversation;
+        }
+        return conversation;
+      });
+    });
+  };
+
+  const hasConversationWith = useCallback(
+    (contactId: number): boolean => {
+      return !!conversations?.find(
+        (conversation) => conversation.contact.id === contactId,
+      );
+    },
+    [conversations],
+  );
+
   const handleNewMessage = useCallback(
     (message: Message) => {
       if (!message.id || lastMessageId === message.id) {
         return;
       }
       lastMessageId = message.id;
-      if (currentContact?.id === message.from.id) {
-        addNewMessage(message);
+      if (!hasConversationWith(message.from.id)) {
+        addConversation(message.from, message);
       } else {
-        incrementContactNewMessages(message.from.id);
+        if (currentContact?.id === message.from.id) {
+          addNewMessage(message);
+        } else {
+          incrementContactNewMessages(message.from.id);
+        }
+        updateConversationLastMessage(message);
       }
     },
-    [currentContact?.id],
+    [addConversation, currentContact?.id, hasConversationWith],
   );
 
   const incrementContactNewMessages = (contactId: number) => {
-    setContacts((prevContacts) => {
-      return prevContacts?.map((contact) => {
-        if (contact.id === contactId) {
-          return { ...contact, newMessages: (contact.newMessages ?? 0) + 1 };
+    console.log('dsjiduhjiasdjisadi');
+    setConversations((prevConversations) => {
+      return prevConversations?.map((conversation) => {
+        if (conversation.contact.id === contactId) {
+          return {
+            ...conversation,
+            newMessages: (conversation.newMessages ?? 0) + 1,
+          } as Conversation;
         }
-        return contact;
+        return conversation;
       });
     });
   };
 
   const resetContactNewMessages = (contactId: number) => {
-    setContacts((prevContacts) => {
-      return prevContacts?.map((contact) => {
-        if (contact.id === contactId) {
-          return { ...contact, newMessages: 0 };
+    setConversations((prevConversations) => {
+      return prevConversations?.map((conversation) => {
+        if (conversation.contact.id === contactId) {
+          return { ...conversation, newMessages: 0 } as Conversation;
         }
-        return contact;
+        return conversation;
       });
     });
   };
@@ -176,7 +232,7 @@ export const Chat = () => {
 
       socket.on('connectedUsers', (payload: string) => {
         console.log('Connected Users', payload);
-        refetchContacts();
+        refetchConversations();
         setOnlineUserIds(JSON.parse(payload) as number[]);
       });
     }
@@ -184,7 +240,7 @@ export const Chat = () => {
       socket?.off('messageReceived');
       socket?.off('connectedUsers');
     };
-  }, [handleNewMessage, refetchContacts, setMessagesRead, socket]);
+  }, [handleNewMessage, refetchConversations, setMessagesRead, socket]);
 
   useEffect(() => {
     scrollToRecentMessage();
@@ -194,21 +250,22 @@ export const Chat = () => {
   }, [messages]);
 
   useEffect(() => {
-    if (contacts && !currentContact && initialContactId) {
-      const initialContact = contacts.find(
-        (contact) => contact.id === Number(initialContactId),
+    if (conversations && !currentContact && initialContactId) {
+      const initialConversation = conversations.find(
+        (conversation) => conversation.contact.id === Number(initialContactId),
       );
-      if (initialContact) {
-        setCurrentContact(initialContact);
+      if (initialConversation) {
+        setCurrentContact(initialConversation.contact);
       }
     }
-  }, [contacts, currentContact]);
+  }, [conversations, currentContact]);
 
   useEffect(() => {
-    if (contactsFromServer) {
-      setContacts(contactsFromServer);
+    if (conversationsFromServer) {
+      console.log(conversationsFromServer);
+      setConversations(conversationsFromServer);
     }
-  }, [contactsFromServer]);
+  }, [conversationsFromServer]);
 
   if (!user) {
     return null;
@@ -218,8 +275,9 @@ export const Chat = () => {
     <div className={styles.container}>
       <div className={styles.sidebar}>
         <ProfileHeader user={user} />
-        <ContactList
+        <ConversationsList
           contacts={contacts ?? []}
+          conversations={conversations ?? []}
           onlineUserIds={onlineUserIds}
           onContactClick={openChat}
         />

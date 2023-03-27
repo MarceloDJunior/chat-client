@@ -17,6 +17,7 @@ const sendMessage = async (message: Message): Promise<number> => {
     fromId: message.from.id,
     toId: message.to.id,
     text: message.text,
+    dateTime: message.dateTime,
   });
   if (response.status !== 201) {
     throw new Error('An error occurred while sending message');
