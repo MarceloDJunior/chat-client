@@ -1,25 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { LAST_CONTACT_ID } from '../../constants/cookies';
-import { useGetConversationsQuery } from '../../queries/conversations';
-import { useGetUser } from '../../queries/user';
+import { LAST_CONTACT_ID } from '@/constants/cookies';
+import { useGetConversationsQuery } from '@/queries/conversations';
+import { useGetUser } from '@/queries/user';
 import {
   useGetMessagesMutation,
   useSendMessageMutation,
   useUpdateReadMutation,
-} from '../../mutations/messages';
-import { Message } from '../../models/message';
+} from '@/mutations/messages';
+import { Message } from '@/models/message';
+import { useWebSocketContext } from '@/context/websocket-context';
+import { ProfileHeader } from '@/components/profile-header';
+import { ConversationsList } from '@/components/conversations-list';
+import { ContactHeader } from '@/components/contact-header';
+import { MessageList } from '@/components/message-list';
+import { SendMessageField } from '@/components/send-message-field';
+import { CookiesHelper } from '@/helpers/cookies';
+import { Loader } from '@/components/loader';
+import { Conversation } from '@/models/conversation';
+import { Contact } from '@/models/contact';
+import { useGetContactsQuery } from '@/queries/contacts';
 import styles from './styles.module.scss';
-import { useWebSocketContext } from '../../context/websocket-context';
-import { ProfileHeader } from '../../components/profile-header';
-import { ConversationsList } from '../../components/conversations-list';
-import { ContactHeader } from '../../components/contact-header';
-import { MessageList } from '../../components/message-list';
-import { SendMessageField } from '../../components/send-message-field';
-import { CookiesHelper } from '../../helpers/cookies';
-import { Loader } from '../../components/loader';
-import { Conversation } from '../../models/conversation';
-import { Contact } from '../../models/contact';
-import { useGetContactsQuery } from '../../queries/contacts';
 
 let lastMessageId: number;
 

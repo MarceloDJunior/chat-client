@@ -1,7 +1,7 @@
-import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect } from 'react';
-import { Loader } from '../../components/loader';
-import { useGetUser } from '../../queries/user';
+import { useAuth0 } from '@auth0/auth0-react';
+import { Loader } from '@/components/loader';
+import { useGetUser } from '@/queries/user';
 import { Chat } from '../chat';
 import styles from './styles.module.scss';
 

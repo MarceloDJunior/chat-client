@@ -1,7 +1,7 @@
-import { Contact } from '../../models/contact';
-import PlaceholderImage from '../../assets/images/profile-placeholder.jpg';
-import styles from './styles.module.scss';
 import classNames from 'classnames';
+import { Contact } from '@/models/contact';
+import PlaceholderImage from '@/assets/images/profile-placeholder.jpg';
+import styles from './styles.module.scss';
 
 type ContactHeaderProps = {
   contact: Contact;

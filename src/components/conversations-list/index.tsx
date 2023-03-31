@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import classNames from 'classnames';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
-import PlaceholderImage from '../../assets/images/profile-placeholder.jpg';
+import PlaceholderImage from '@/assets/images/profile-placeholder.jpg';
+import { DateHelper } from '@/helpers/date';
+import { Conversation } from '@/models/conversation';
+import { Contact } from '@/models/contact';
 import styles from './styles.module.scss';
-import { DateHelper } from '../../helpers/date';
-import { Conversation } from '../../models/conversation';
-import { Contact } from '../../models/contact';
 
 type ConversationsListProps = {
   conversations: Conversation[];

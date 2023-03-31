@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { API_URL } from '../config/environment';
-import { ACCESS_TOKEN } from '../constants/cookies';
-import { CookiesHelper } from '../helpers/cookies';
+import { API_URL } from '@/config/environment';
+import { ACCESS_TOKEN } from '@/constants/cookies';
+import { CookiesHelper } from '@/helpers/cookies';
 
 export const api = axios.create({
   baseURL: API_URL,

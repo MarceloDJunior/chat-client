@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react';
-import SendIcon from '../../assets/icons/send.svg';
+import SendIcon from '@/assets/icons/send.svg';
 import styles from './styles.module.scss';
 
 type SendMessageFieldProps = {

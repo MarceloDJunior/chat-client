@@ -1,6 +1,6 @@
 import { useQuery } from 'react-query';
-import { User } from '../models/user';
-import { api } from '../services/api';
+import { User } from '@/models/user';
+import { api } from '@/services/api';
 
 const getUser = async () => {
   const response = await api.get('/users/me');

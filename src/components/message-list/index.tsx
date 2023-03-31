@@ -1,10 +1,10 @@
 import classNames from 'classnames';
 import { Fragment, useMemo } from 'react';
-import { DateHelper } from '../../helpers/date';
-import { Message } from '../../models/message';
-import { User } from '../../models/user';
-import CheckIcon from '../../assets/icons/check.svg';
-import DoubleCheckIcon from '../../assets/icons/double-check.svg';
+import CheckIcon from '@/assets/icons/check.svg';
+import DoubleCheckIcon from '@/assets/icons/double-check.svg';
+import { DateHelper } from '@/helpers/date';
+import { Message } from '@/models/message';
+import { User } from '@/models/user';
 import styles from './styles.module.scss';
 
 type MessageListProps = {

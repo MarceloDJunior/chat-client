@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { WS_URL } from '../config/environment';
-import { ACCESS_TOKEN } from '../constants/cookies';
-import { CookiesHelper } from '../helpers/cookies';
+import { WS_URL } from '@/config/environment';
+import { ACCESS_TOKEN } from '@/constants/cookies';
+import { CookiesHelper } from '@/helpers/cookies';
 
 type WebSocketContextType = {
   socket: Socket | null;

@@ -1,6 +1,6 @@
 import { useMutation } from 'react-query';
-import { Message } from '../models/message';
-import { api } from '../services/api';
+import { Message } from '@/models/message';
+import { api } from '@/services/api';
 
 const getMessages = async (contactId: number): Promise<Message[]> => {
   const response = await api.get(`/messages/${contactId}?take=50&order=DESC`);

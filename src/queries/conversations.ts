@@ -1,6 +1,6 @@
 import { useQuery } from 'react-query';
-import { Conversation } from '../models/conversation';
-import { api } from '../services/api';
+import { Conversation } from '@/models/conversation';
+import { api } from '@/services/api';
 
 const getConversations = async () => {
   const response = await api.get('/conversations');

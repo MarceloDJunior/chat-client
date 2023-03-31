@@ -1,10 +1,10 @@
-import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader } from '../../components/loader';
-import { ACCESS_TOKEN } from '../../constants/cookies';
-import { CookiesHelper } from '../../helpers/cookies';
-import { useCreateOrUpdateUserMutation } from '../../mutations/user';
+import { useAuth0 } from '@auth0/auth0-react';
+import { Loader } from '@/components/loader';
+import { ACCESS_TOKEN } from '@/constants/cookies';
+import { CookiesHelper } from '@/helpers/cookies';
+import { useCreateOrUpdateUserMutation } from '@/mutations/user';
 
 export const LoginResponse = () => {
   const { user, getAccessTokenSilently, isLoading, error, logout } = useAuth0();
