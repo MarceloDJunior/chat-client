@@ -3,11 +3,11 @@ import { Contact } from '@/models/contact';
 import PlaceholderImage from '@/assets/images/profile-placeholder.jpg';
 import styles from './styles.module.scss';
 
-type ContactHeaderProps = {
+type ContactInfoProps = {
   contact: Contact;
 };
 
-export const ContactHeader = ({ contact }: ContactHeaderProps) => {
+export const ContactInfo = ({ contact }: ContactInfoProps) => {
   return (
     <div className={styles.container}>
       <img

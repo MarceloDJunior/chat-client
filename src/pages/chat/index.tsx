@@ -11,10 +11,12 @@ import { Message } from '@/models/message';
 import { useWebSocketContext } from '@/context/websocket-context';
 import { ProfileHeader } from '@/components/profile-header';
 import { ConversationsList } from '@/components/conversations-list';
-import { ContactHeader } from '@/components/contact-header';
+import { ContactInfo } from '@/components/contact-info';
 import { MessageList } from '@/components/message-list';
+import { ModalPageWithNavigation } from '@/components/modal-page-with-navigation';
 import { SendMessageField } from '@/components/send-message-field';
 import { CookiesHelper } from '@/helpers/cookies';
+import { useBreakpoints } from '@/hooks/use-breakpoints';
 import { Loader } from '@/components/loader';
 import { Conversation } from '@/models/conversation';
 import { Contact } from '@/models/contact';
@@ -30,22 +32,29 @@ export const Chat = () => {
   const { data: conversationsFromServer, refetch: refetchConversations } =
     useGetConversationsQuery();
   const { data: contacts } = useGetContactsQuery();
-  const [currentContact, setCurrentContact] = useState<Contact>();
-  const [onlineUserIds, setOnlineUserIds] = useState<number[]>([]);
-  const [conversations, setConversations] = useState<Conversation[]>();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const { mutateAsync: getMessages } = useGetMessagesMutation();
   const { mutateAsync: sendMessage, isLoading: isSending } =
     useSendMessageMutation();
   const { mutateAsync: updateRead } = useUpdateReadMutation();
   const { socket, connect: connectWebSocket } = useWebSocketContext();
+  const { isMobile } = useBreakpoints();
   const messagesRef = useRef<HTMLDivElement>(null);
+  const [currentContact, setCurrentContact] = useState<Contact>();
+  const [onlineUserIds, setOnlineUserIds] = useState<number[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const openChat = (contact: Contact) => {
     setCurrentContact(contact);
     resetContactNewMessages(contact.id);
   };
+
+  const closeChat = () => {
+    setCurrentContact(undefined);
+  };
+
+  const isMobileConversationVisible = !!currentContact;
 
   const addNewMessage = (message: Message) => {
     setMessages((prevMessages) => {
@@ -55,21 +64,24 @@ export const Chat = () => {
     });
   };
 
-  const addConversation = (contact: Contact, message: Message) => {
-    setConversations((prevConversations) => {
-      const conversations = [...(prevConversations ?? [])];
-      conversations.unshift({
-        contact,
-        lastMessage: message,
-        newMessages: 0,
-      });
+  const addConversation = useCallback(
+    (contact: Contact, message: Message) => {
+      setConversations((prevConversations) => {
+        const conversations = [...(prevConversations ?? [])];
+        conversations.unshift({
+          contact,
+          lastMessage: message,
+          newMessages: 0,
+        });
 
-      return conversations;
-    });
-    if (contact.id === currentContact?.id) {
-      addNewMessage(message);
-    }
-  };
+        return conversations;
+      });
+      if (contact.id === currentContact?.id) {
+        addNewMessage(message);
+      }
+    },
+    [currentContact?.id],
+  );
 
   const handleSendMessage = async (text: string): Promise<boolean> => {
     try {
@@ -151,7 +163,6 @@ export const Chat = () => {
   );
 
   const incrementContactNewMessages = (contactId: number) => {
-    console.log('dsjiduhjiasdjisadi');
     setConversations((prevConversations) => {
       return prevConversations?.map((conversation) => {
         if (conversation.contact.id === contactId) {
@@ -209,6 +220,8 @@ export const Chat = () => {
       setMessages([]);
       getInitialMessages(currentContact.id);
       CookiesHelper.set(LAST_CONTACT_ID, currentContact.id.toString());
+    } else {
+      CookiesHelper.remove(LAST_CONTACT_ID);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentContact]);
@@ -247,18 +260,20 @@ export const Chat = () => {
     setTimeout(() => {
       setIsLoading(false);
     }, 800);
-  }, [messages]);
+  }, [messages, isMobile]);
 
   useEffect(() => {
-    if (conversations && !currentContact && initialContactId) {
+    if (!!conversations?.length && initialContactId) {
       const initialConversation = conversations.find(
         (conversation) => conversation.contact.id === Number(initialContactId),
       );
       if (initialConversation) {
-        setCurrentContact(initialConversation.contact);
+        setCurrentContact(
+          (prevValue) => prevValue ?? initialConversation.contact,
+        );
       }
     }
-  }, [conversations, currentContact]);
+  }, [conversations]);
 
   useEffect(() => {
     if (conversationsFromServer) {
@@ -266,6 +281,25 @@ export const Chat = () => {
       setConversations(conversationsFromServer);
     }
   }, [conversationsFromServer]);
+
+  const renderChatComponents = () => {
+    if (!user) {
+      return null;
+    }
+    return (
+      <div className={styles.chat}>
+        <div className={styles.messages} ref={messagesRef}>
+          <MessageList messages={messages} myUser={user} />
+        </div>
+        {isLoading ? (
+          <div className={styles.overlay}>
+            <Loader height={46} width={60} />
+          </div>
+        ) : null}
+        <SendMessageField onSubmit={handleSendMessage} isSending={isSending} />
+      </div>
+    );
+  };
 
   if (!user) {
     return null;
@@ -286,21 +320,22 @@ export const Chat = () => {
         className={styles['main-content']}
         onMouseEnter={updateMessagesRead}
       >
-        {currentContact ? (
+        {isMobile ? (
+          <ModalPageWithNavigation
+            isVisible={isMobileConversationVisible}
+            onClose={closeChat}
+            headerContent={
+              currentContact ? <ContactInfo contact={currentContact} /> : null
+            }
+          >
+            {renderChatComponents()}
+          </ModalPageWithNavigation>
+        ) : currentContact ? (
           <>
-            <ContactHeader contact={currentContact} />
-            <div className={styles.messages} ref={messagesRef}>
-              <MessageList messages={messages} myUser={user} />
+            <div className={styles['contact-header']}>
+              <ContactInfo contact={currentContact} />
             </div>
-            {isLoading ? (
-              <div className={styles.overlay}>
-                <Loader height={46} width={60} />
-              </div>
-            ) : null}
-            <SendMessageField
-              onSubmit={handleSendMessage}
-              isSending={isSending}
-            />
+            {renderChatComponents()}
           </>
         ) : (
           <h3>Select a user to start chatting</h3>
