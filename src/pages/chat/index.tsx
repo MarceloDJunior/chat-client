@@ -251,33 +251,38 @@ export const Chat = () => {
     }
     return () => {
       socket?.off('messageReceived');
+      socket?.off('messagesRead');
       socket?.off('connectedUsers');
     };
   }, [handleNewMessage, refetchConversations, setMessagesRead, socket]);
 
   useEffect(() => {
     scrollToRecentMessage();
+    // timeout to give some time to finish scrolling before hiding loader
     setTimeout(() => {
       setIsLoading(false);
     }, 800);
   }, [messages, isMobile]);
 
   useEffect(() => {
-    if (!!conversations?.length && initialContactId) {
-      const initialConversation = conversations.find(
-        (conversation) => conversation.contact.id === Number(initialContactId),
-      );
-      if (initialConversation) {
-        setCurrentContact(
-          (prevValue) => prevValue ?? initialConversation.contact,
+    const setInitialConversation = () => {
+      if (!!conversations?.length && initialContactId) {
+        const initialConversation = conversations.find(
+          (conversation) =>
+            conversation.contact.id === Number(initialContactId),
         );
+        if (initialConversation) {
+          setCurrentContact(
+            (prevValue) => prevValue ?? initialConversation.contact,
+          );
+        }
       }
-    }
+    };
+    setInitialConversation();
   }, [conversations]);
 
   useEffect(() => {
     if (conversationsFromServer) {
-      console.log(conversationsFromServer);
       setConversations(conversationsFromServer);
     }
   }, [conversationsFromServer]);
@@ -320,7 +325,7 @@ export const Chat = () => {
         className={styles['main-content']}
         onMouseEnter={updateMessagesRead}
       >
-        {isMobile ? (
+        {isMobile ? ( // render chat components inside navigation page on mobile
           <ModalPageWithNavigation
             isVisible={isMobileConversationVisible}
             onClose={closeChat}
@@ -330,7 +335,7 @@ export const Chat = () => {
           >
             {renderChatComponents()}
           </ModalPageWithNavigation>
-        ) : currentContact ? (
+        ) : currentContact ? ( // render chat components in desktop if contact is selected
           <>
             <div className={styles['contact-header']}>
               <ContactInfo contact={currentContact} />
