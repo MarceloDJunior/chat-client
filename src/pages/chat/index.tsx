@@ -169,11 +169,12 @@ export const Chat = () => {
         }
 
         if (!isTabActive) {
-          NotificationHelper.showNotification(
-            `New message from ${message.from.name}`,
-            message.text,
-            () => openChat(message.from),
-          );
+          NotificationHelper.showNotification({
+            title: `New message from ${message.from.name}`,
+            message: message.text,
+            icon: message.from.picture,
+            onClick: () => openChat(message.from),
+          });
         }
 
         updateConversationLastMessage(message);

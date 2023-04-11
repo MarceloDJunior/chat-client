@@ -1,3 +1,10 @@
+type Notification = {
+  title: string;
+  message: string;
+  icon?: string;
+  onClick?: () => void;
+};
+
 export class NotificationHelper {
   public static async requestPermission() {
     if (!this.hasBrowserSupport()) {
@@ -11,15 +18,16 @@ export class NotificationHelper {
     await Notification.requestPermission();
   }
 
-  public static showNotification(
-    title: string,
-    message: string,
-    onClick?: () => void,
-  ) {
+  public static showNotification({
+    title,
+    message,
+    icon,
+    onClick,
+  }: Notification) {
     if (!this.hasPermission()) {
       return;
     }
-    const notification = new Notification(title, { body: message });
+    const notification = new Notification(title, { body: message, icon });
     if (onClick) {
       notification.onclick = onClick;
     }
