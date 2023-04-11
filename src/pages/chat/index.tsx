@@ -22,10 +22,15 @@ import { Conversation } from '@/models/conversation';
 import { Contact } from '@/models/contact';
 import { useGetContactsQuery } from '@/queries/contacts';
 import styles from './styles.module.scss';
+import { useTabActive } from '@/hooks/use-tab-active';
 
 let lastMessageId: number;
 
 const initialContactId = CookiesHelper.get(LAST_CONTACT_ID);
+
+const updatePageTitle = (newTitle: string) => {
+  document.title = newTitle;
+};
 
 export const Chat = () => {
   const { data: user } = useGetUser();
@@ -38,6 +43,7 @@ export const Chat = () => {
   const { mutateAsync: updateRead } = useUpdateReadMutation();
   const { socket, connect: connectWebSocket } = useWebSocketContext();
   const { isMobile } = useBreakpoints();
+  const { isTabActive } = useTabActive();
   const messagesRef = useRef<HTMLDivElement>(null);
   const [currentContact, setCurrentContact] = useState<Contact>();
   const [onlineUserIds, setOnlineUserIds] = useState<number[]>([]);
@@ -153,13 +159,16 @@ export const Chat = () => {
       } else {
         if (currentContact?.id === message.from.id) {
           addNewMessage(message);
+          if (!isTabActive) {
+            incrementContactNewMessages(message.from.id);
+          }
         } else {
           incrementContactNewMessages(message.from.id);
         }
         updateConversationLastMessage(message);
       }
     },
-    [addConversation, currentContact?.id, hasConversationWith],
+    [addConversation, currentContact?.id, hasConversationWith, isTabActive],
   );
 
   const incrementContactNewMessages = (contactId: number) => {
@@ -191,6 +200,7 @@ export const Chat = () => {
     try {
       if (currentContact) {
         await updateRead(currentContact.id);
+        resetContactNewMessages(currentContact.id);
         socket?.emit('messagesRead', currentContact.id);
       }
     } catch (err) {
@@ -278,7 +288,25 @@ export const Chat = () => {
         }
       }
     };
+
+    const updatePageTitleOnNewMessages = () => {
+      if (!conversations?.length) {
+        return;
+      }
+
+      const totalNewMessages: number = conversations.reduce(
+        (acc, currConversation) => {
+          return acc + (currConversation.newMessages ?? 0);
+        },
+        0,
+      );
+
+      const newTitle = totalNewMessages ? `Chat (${totalNewMessages})` : 'Chat';
+      updatePageTitle(newTitle);
+    };
+
     setInitialConversation();
+    updatePageTitleOnNewMessages();
   }, [conversations]);
 
   useEffect(() => {
