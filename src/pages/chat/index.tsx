@@ -23,6 +23,7 @@ import { Contact } from '@/models/contact';
 import { useGetContactsQuery } from '@/queries/contacts';
 import styles from './styles.module.scss';
 import { useTabActive } from '@/hooks/use-tab-active';
+import { NotificationHelper } from '@/helpers/notification';
 
 let lastMessageId: number;
 
@@ -51,10 +52,11 @@ export const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const openChat = (contact: Contact) => {
+  const openChat = useCallback((contact: Contact) => {
     setCurrentContact(contact);
     resetContactNewMessages(contact.id);
-  };
+    NotificationHelper.requestPermission();
+  }, []);
 
   const closeChat = () => {
     setCurrentContact(undefined);
@@ -165,10 +167,25 @@ export const Chat = () => {
         } else {
           incrementContactNewMessages(message.from.id);
         }
+
+        if (!isTabActive) {
+          NotificationHelper.showNotification(
+            `New message from ${message.from.name}`,
+            message.text,
+            () => openChat(message.from),
+          );
+        }
+
         updateConversationLastMessage(message);
       }
     },
-    [addConversation, currentContact?.id, hasConversationWith, isTabActive],
+    [
+      addConversation,
+      currentContact?.id,
+      hasConversationWith,
+      isTabActive,
+      openChat,
+    ],
   );
 
   const incrementContactNewMessages = (contactId: number) => {
