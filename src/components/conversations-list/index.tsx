@@ -79,8 +79,10 @@ export const ConversationsList = ({
         className={styles.picture}
       />
       <div className={styles.wrapper}>
-        <div>
-          <div className={styles.name}>{contact.name} </div>
+        <div className={styles['contact-info']}>
+          <div className={styles.name} title={contact.name}>
+            {contact.name}
+          </div>
           {lastMessage && (
             <div>{DateHelper.formatHoursMinutes(lastMessage.dateTime)}</div>
           )}

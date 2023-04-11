@@ -16,7 +16,9 @@ export const ContactInfo = ({ contact }: ContactInfoProps) => {
         className={styles.picture}
       />
       <div>
-        <div className={styles.name}>{contact.name}</div>
+        <div className={styles.name} title={contact.name}>
+          {contact.name}
+        </div>
         <span
           className={classNames(styles.status, {
             [styles.online]: contact.status === 'online',

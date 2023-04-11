@@ -34,7 +34,7 @@ export const SendMessageField = ({
         onFocus={onFocus}
         placeholder="Write message..."
       />
-      <button type="submit" disabled={isSending}>
+      <button type="submit" disabled={isSending} title="Send Message">
         <img src={SendIcon} alt="Send Message" width={32} height={32} />
       </button>
     </form>

@@ -42,11 +42,18 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        overflow: hidden;
 
+        .contact-info {
+          overflow: hidden;
+          flex: 1;
 
-        .name {
-          display: flex;
-          align-items: center;
+          .name {
+            display: block;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+          }
         }
 
         .new-messages {

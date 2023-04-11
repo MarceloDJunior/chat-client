@@ -22,8 +22,8 @@ export const ProfileHeader = ({ user }: ProfileHeaderProps) => {
   return (
     <div className={styles.container}>
       <img src={user.picture} alt="Picture" className={styles.picture} />
-      <div>
-        <h2>{user.name}</h2>
+      <div className={styles.wrapper}>
+        <h2 title={user.name}>{user.name}</h2>
         <button onClick={handleLogout}>Disconnect</button>
       </div>
     </div>

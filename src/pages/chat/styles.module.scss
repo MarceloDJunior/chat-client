@@ -22,8 +22,14 @@
 
   .sidebar {
     flex: 1;
+    overflow: hidden;
     padding: 8px 20px;
     background-color: #181e2d;
+
+    @include breakpoints.sm {
+      flex: 1 0 300px;
+      max-width: 420px;
+    }
   }
 
   .main-content {
@@ -34,7 +40,7 @@
     display: contents;
 
     @include breakpoints.sm {
-      flex: 3 1 500px;
+      flex: 3 0 600px;
       display: flex;
     }
 
