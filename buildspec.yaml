@@ -1,0 +1,20 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Installing NPM dependencies...
+      - npm ci
+  build:
+    commands:
+      - echo Build started on 'date'
+      - npm run build
+  post_build:
+    commands:
+      - aws s3 cp --recursive ./dist s3://$S3_BUCKET_NAME/
+      - aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./dist/index.html s3://$S3_BUCKET_NAME/
+      - aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths /index.html
+artifacts:
+  files:
+    - "dist/*"
+    - "dist/**/*"
