@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { WS_URL } from '@/config/environment';
+import { ENV, WS_URL } from '@/config/environment';
 import { ACCESS_TOKEN } from '@/constants/cookies';
 import { CookiesHelper } from '@/helpers/cookies';
 
@@ -8,6 +8,8 @@ type WebSocketContextType = {
   socket: Socket | null;
   connect: () => void;
 };
+
+const isDev = ENV === 'development';
 
 const WebSocketContext = createContext({} as WebSocketContextType);
 
@@ -24,8 +26,9 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
     if (socket) return;
     const newSocket = io(WS_URL, {
       multiplex: true,
-      withCredentials: true,
-      transports: ['websocket'],
+      withCredentials: isDev ? false : true,
+      forceNew: true,
+      transports: ['polling'],
       query: {
         accessToken: CookiesHelper.get(ACCESS_TOKEN),
       },
