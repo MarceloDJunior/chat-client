@@ -24,6 +24,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
     if (socket) return;
     const newSocket = io(WS_URL, {
       multiplex: true,
+      withCredentials: true,
       transports: ['websocket'],
       query: {
         accessToken: CookiesHelper.get(ACCESS_TOKEN),
