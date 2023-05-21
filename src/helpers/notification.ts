@@ -8,7 +8,7 @@ type Notification = {
 export class NotificationHelper {
   public static async requestPermission() {
     if (!this.hasBrowserSupport()) {
-      alert('This browser does not support desktop notifications');
+      return;
     }
 
     if (this.hasPermission()) {
