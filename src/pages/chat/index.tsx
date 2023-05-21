@@ -38,8 +38,7 @@ const generateUniqueId = () =>
 
 export const Chat = () => {
   const { data: user } = useGetUser();
-  const { data: conversationsFromServer, refetch: refetchConversations } =
-    useGetConversationsQuery();
+  const { data: conversationsFromServer } = useGetConversationsQuery();
   const { data: contacts } = useGetContactsQuery();
   const { mutateAsync: getMessages } = useGetMessagesMutation();
   const { mutateAsync: sendMessage } = useSendMessageMutation();
@@ -269,7 +268,7 @@ export const Chat = () => {
       CookiesHelper.remove(LAST_CONTACT_ID);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentContact]);
+  }, [currentContact?.id]);
 
   useEffect(() => {
     connectWebSocket();
@@ -290,8 +289,19 @@ export const Chat = () => {
 
       socket.on('connectedUsers', (payload: string) => {
         console.log('Connected Users', payload);
-        refetchConversations();
-        setOnlineUserIds(JSON.parse(payload) as number[]);
+        const onlineUserIds = JSON.parse(payload) as number[];
+        setOnlineUserIds(onlineUserIds);
+        const isCurrentContactOnline = !!(
+          currentContact?.id && onlineUserIds.includes(currentContact.id)
+        );
+        setCurrentContact((prevContact) => {
+          if (prevContact) {
+            return {
+              ...prevContact,
+              status: isCurrentContactOnline ? 'online' : 'offline',
+            };
+          }
+        });
       });
     }
     return () => {
@@ -299,7 +309,7 @@ export const Chat = () => {
       socket?.off('messagesRead');
       socket?.off('connectedUsers');
     };
-  }, [handleNewMessage, refetchConversations, setMessagesRead, socket]);
+  }, [currentContact?.id, handleNewMessage, setMessagesRead, socket]);
 
   useEffect(() => {
     scrollToRecentMessage();
