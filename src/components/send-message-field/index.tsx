@@ -5,22 +5,18 @@ import styles from './styles.module.scss';
 type SendMessageFieldProps = {
   onSubmit: (text: string) => Promise<boolean>;
   onFocus?: () => void;
-  isSending?: boolean;
 };
 
 export const SendMessageField = ({
   onSubmit,
   onFocus,
-  isSending,
 }: SendMessageFieldProps) => {
   const [text, setText] = useState<string>('');
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    const result = await onSubmit(text);
-    if (result) {
-      setText('');
-    }
+    setText('');
+    await onSubmit(text);
   };
 
   return (
@@ -30,11 +26,10 @@ export const SendMessageField = ({
         name="text"
         onChange={(event) => setText(event.target.value)}
         value={text}
-        readOnly={isSending}
         onFocus={onFocus}
         placeholder="Write message..."
       />
-      <button type="submit" disabled={isSending} title="Send Message">
+      <button type="submit" title="Send Message">
         <img src={SendIcon} alt="Send Message" width={32} height={32} />
       </button>
     </form>

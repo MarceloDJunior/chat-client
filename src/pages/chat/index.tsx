@@ -33,14 +33,16 @@ const updatePageTitle = (newTitle: string) => {
   document.title = newTitle;
 };
 
+const generateUniqueId = () =>
+  new Date().getTime() + Math.floor(Math.random() * 1000);
+
 export const Chat = () => {
   const { data: user } = useGetUser();
   const { data: conversationsFromServer, refetch: refetchConversations } =
     useGetConversationsQuery();
   const { data: contacts } = useGetContactsQuery();
   const { mutateAsync: getMessages } = useGetMessagesMutation();
-  const { mutateAsync: sendMessage, isLoading: isSending } =
-    useSendMessageMutation();
+  const { mutateAsync: sendMessage } = useSendMessageMutation();
   const { mutateAsync: updateRead } = useUpdateReadMutation();
   const { socket, connect: connectWebSocket } = useWebSocketContext();
   const { isMobile } = useBreakpoints();
@@ -72,6 +74,17 @@ export const Chat = () => {
     });
   };
 
+  const updateMessage = (message: Message) => {
+    setMessages((prevMessages) =>
+      prevMessages.map((currMessage) => {
+        if (currMessage.id === message.id) {
+          return message;
+        }
+        return currMessage;
+      }),
+    );
+  };
+
   const addConversation = useCallback(
     (contact: Contact, message: Message) => {
       setConversations((prevConversations) => {
@@ -96,21 +109,25 @@ export const Chat = () => {
       if (!user || !currentContact) {
         return false;
       }
+      const tempId = generateUniqueId();
       const message: Message = {
+        id: tempId,
         from: user,
         to: currentContact,
         dateTime: new Date(),
         text,
         read: false,
+        pending: true,
       };
-      const insertedId = await sendMessage(message);
-      message.id = insertedId;
+      addNewMessage(message);
+      await sendMessage(message);
+      message.pending = false;
       socket?.emit('sendMessage', JSON.stringify(message));
       socket?.emit('messagesRead', currentContact.id);
       if (!hasConversationWith(currentContact.id)) {
         addConversation(currentContact, message);
       } else {
-        addNewMessage(message);
+        updateMessage(message);
         updateConversationLastMessage(message);
       }
 
@@ -347,7 +364,7 @@ export const Chat = () => {
             <Loader height={46} width={60} />
           </div>
         ) : null}
-        <SendMessageField onSubmit={handleSendMessage} isSending={isSending} />
+        <SendMessageField onSubmit={handleSendMessage} />
       </div>
     );
   };

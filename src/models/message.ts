@@ -7,4 +7,5 @@ export type Message = {
   to: User;
   dateTime: Date;
   read: boolean;
+  pending?: boolean;
 };

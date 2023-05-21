@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import { Fragment, useMemo } from 'react';
 import CheckIcon from '@/assets/icons/check.svg';
 import DoubleCheckIcon from '@/assets/icons/double-check.svg';
+import PendingIcon from '@/assets/icons/pending.svg';
 import { DateHelper } from '@/helpers/date';
 import { Message } from '@/models/message';
 import { User } from '@/models/user';
@@ -35,6 +36,7 @@ export const MessageList = ({ myUser, messages }: MessageListProps) => {
             <div
               className={classNames(styles['message-container'], {
                 [styles.sent]: message.from.id === myUser.id,
+                [styles.pending]: !!message.pending,
               })}
             >
               <div className={styles.message}>
@@ -45,7 +47,13 @@ export const MessageList = ({ myUser, messages }: MessageListProps) => {
                 <div className={styles['message-status']}>
                   {message.from.id === myUser.id && (
                     <img
-                      src={message.read ? DoubleCheckIcon : CheckIcon}
+                      src={
+                        message.pending
+                          ? PendingIcon
+                          : message.read
+                          ? DoubleCheckIcon
+                          : CheckIcon
+                      }
                       width={message.read ? 18 : 16}
                       height={16}
                     />
