@@ -1,16 +1,28 @@
 import { useMutation } from 'react-query';
 import { Message } from '@/models/message';
 import { api } from '@/services/api';
+import { Paginated } from '@/models/paginated';
 
-const getMessages = async (contactId: number): Promise<Message[]> => {
-  const response = await api.get(`/messages/${contactId}?take=50&order=DESC`);
+type GetMessagesParams = {
+  contactId: number;
+  page: number;
+};
+
+const getMessages = async ({
+  contactId,
+  page,
+}: GetMessagesParams): Promise<Paginated<Message>> => {
+  const response = await api.get(
+    `/messages/${contactId}?page=${page}&take=50&order=DESC`,
+  );
   if (response.status !== 200) {
     throw new Error('An error occurred while getting messages');
   }
-  return response.data.data;
+  return response.data;
 };
 
-export const useGetMessagesMutation = () => useMutation(getMessages);
+export const useGetMessagesMutation = () =>
+  useMutation('getMessages', getMessages);
 
 const sendMessage = async (message: Message): Promise<number> => {
   const response = await api.post('/conversations/send-message', {

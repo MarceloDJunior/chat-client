@@ -1,5 +1,11 @@
 .container {
   width: 100%;
+  text-align: center;
+
+  .load-more-button {
+    align-self: center;
+    background-color: #4D38A2;
+  }
 
   .date {
     margin: 30px auto;

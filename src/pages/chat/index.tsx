@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LAST_CONTACT_ID } from '@/constants/cookies';
 import { useGetConversationsQuery } from '@/queries/conversations';
 import { useGetUser } from '@/queries/user';
@@ -52,6 +52,9 @@ export const Chat = () => {
   const [conversations, setConversations] = useState<Conversation[]>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isAtBottom, setIsAtBottom] = useState(true);
 
   const openChat = useCallback((contact: Contact) => {
     setCurrentContact(contact);
@@ -65,13 +68,13 @@ export const Chat = () => {
 
   const isMobileConversationVisible = !!currentContact;
 
-  const addNewMessage = (message: Message) => {
+  const addNewMessage = useCallback((message: Message) => {
     setMessages((prevMessages) => {
       const newMessages = [...prevMessages];
       newMessages.unshift(message);
       return newMessages;
     });
-  };
+  }, []);
 
   const updateMessage = (message: Message) => {
     setMessages((prevMessages) =>
@@ -100,7 +103,7 @@ export const Chat = () => {
         addNewMessage(message);
       }
     },
-    [currentContact?.id],
+    [addNewMessage, currentContact?.id],
   );
 
   const handleSendMessage = async (text: string): Promise<boolean> => {
@@ -198,6 +201,7 @@ export const Chat = () => {
     },
     [
       addConversation,
+      addNewMessage,
       currentContact?.id,
       hasConversationWith,
       isTabActive,
@@ -253,15 +257,47 @@ export const Chat = () => {
     [currentContact?.id],
   );
 
+  const loadMoreMessages = useCallback(async () => {
+    const { data, meta } = await getMessages({
+      contactId: currentContact?.id ?? 0,
+      page: currentPage + 1,
+    });
+    setMessages((prevData) => prevData.concat(data));
+    setHasMoreMessages(meta.hasNextPage);
+    setCurrentPage((prevValue) => prevValue + 1);
+  }, [currentContact?.id, getMessages, currentPage]);
+
+  const lastMessage = useMemo(() => {
+    if (!(messages.length > 0)) {
+      return null;
+    }
+    const lastMessage = messages[0];
+    return lastMessage;
+  }, [messages]);
+
   useEffect(() => {
+    const resetChat = () => {
+      setIsAtBottom(true);
+      setIsLoading(true);
+      setMessages([]);
+    };
+
     const getInitialMessages = async (contactId: number) => {
-      const messages = await getMessages(contactId);
-      setMessages(messages);
+      const { data, meta } = await getMessages({
+        contactId,
+        page: 1,
+      });
+      setMessages(data);
+      setHasMoreMessages(meta.hasNextPage);
+      setCurrentPage(1);
+      // timeout to give some time to finish scrolling before hiding loader
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 800);
     };
 
     if (currentContact) {
-      setIsLoading(true);
-      setMessages([]);
+      resetChat();
       getInitialMessages(currentContact.id);
       CookiesHelper.set(LAST_CONTACT_ID, currentContact.id.toString());
     } else {
@@ -312,12 +348,16 @@ export const Chat = () => {
   }, [currentContact?.id, handleNewMessage, setMessagesRead, socket]);
 
   useEffect(() => {
-    scrollToRecentMessage();
-    // timeout to give some time to finish scrolling before hiding loader
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
-  }, [messages, isMobile]);
+    if (!lastMessage?.id) return;
+
+    const isSentFromMe = lastMessage.from?.id === user?.id;
+    const isSentFromContactAndIsChatActive = !isSentFromMe && isAtBottom;
+
+    if (isSentFromMe || isSentFromContactAndIsChatActive) {
+      scrollToRecentMessage();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastMessage?.id, isMobile]);
 
   useEffect(() => {
     const setInitialConversation = () => {
@@ -360,6 +400,26 @@ export const Chat = () => {
     }
   }, [conversationsFromServer]);
 
+  useEffect(() => {
+    const addListenerToCheckIfIsAtTheEndOfChat = () => {
+      const messagesContainerRef = messagesRef.current;
+
+      const listener = (event: any) => {
+        const element = event.target;
+        const isAtBottom =
+          element.scrollHeight - element.scrollTop - element.clientHeight <= 30;
+        setIsAtBottom(isAtBottom);
+      };
+
+      messagesContainerRef?.addEventListener('scroll', listener);
+
+      return () => {
+        messagesContainerRef?.removeEventListener('scroll', listener);
+      };
+    };
+    addListenerToCheckIfIsAtTheEndOfChat();
+  }, []);
+
   const renderChatComponents = () => {
     if (!user) {
       return null;
@@ -367,7 +427,12 @@ export const Chat = () => {
     return (
       <div className={styles.chat}>
         <div className={styles.messages} ref={messagesRef}>
-          <MessageList messages={messages} myUser={user} />
+          <MessageList
+            messages={messages}
+            myUser={user}
+            hasMoreMessages={hasMoreMessages}
+            onLoadMoreClick={loadMoreMessages}
+          />
         </div>
         {isLoading ? (
           <div className={styles.overlay}>
