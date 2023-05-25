@@ -5,7 +5,9 @@ import PlaceholderImage from '@/assets/images/profile-placeholder.jpg';
 import { DateHelper } from '@/helpers/date';
 import { Conversation } from '@/models/conversation';
 import { Contact } from '@/models/contact';
+import { useGetUser } from '@/queries/user';
 import styles from './styles.module.scss';
+import { MessageStatus } from '../message-status';
 
 type ConversationsListProps = {
   conversations: Conversation[];
@@ -20,6 +22,7 @@ export const ConversationsList = ({
   onlineUserIds,
   onContactClick,
 }: ConversationsListProps) => {
+  const { data: user } = useGetUser();
   const [animationParent] = useAutoAnimate();
   const orderedStatusConversations = useMemo(() => {
     if (!conversations) {
@@ -84,19 +87,33 @@ export const ConversationsList = ({
             {contact.name}
           </div>
           {lastMessage && (
-            <div>{DateHelper.formatHoursMinutes(lastMessage.dateTime)}</div>
+            <div className={styles['last-message']}>
+              {lastMessage.from.id === user?.id && (
+                <MessageStatus
+                  message={lastMessage}
+                  className={styles.icon}
+                  color="#b5b5b5"
+                />
+              )}
+              <span>{lastMessage.text}</span>
+            </div>
           )}
-          <span
-            className={classNames(styles.status, {
-              [styles.online]: contact.status === 'online',
-            })}
-          >
-            {contact.status}
-          </span>
+          {contact.status === 'online' && (
+            <span className={classNames(styles.status, styles.online)}>
+              {contact.status}
+            </span>
+          )}
         </div>
-        {!!newMessages && (
-          <span className={styles['new-messages']}>{newMessages}</span>
-        )}
+        <div className={styles['last-message-wrapper']}>
+          {lastMessage && (
+            <div className={styles.time}>
+              {DateHelper.formatHoursMinutes(lastMessage.dateTime)}
+            </div>
+          )}
+          {!!newMessages && (
+            <span className={styles['new-messages']}>{newMessages}</span>
+          )}
+        </div>
       </div>
     </li>
   );

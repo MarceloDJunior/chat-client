@@ -1,12 +1,10 @@
 import classNames from 'classnames';
 import { Fragment, useCallback, useMemo, useState } from 'react';
-import CheckIcon from '@/assets/icons/check.svg';
-import DoubleCheckIcon from '@/assets/icons/double-check.svg';
-import PendingIcon from '@/assets/icons/pending.svg';
 import { DateHelper } from '@/helpers/date';
 import { Message } from '@/models/message';
 import { User } from '@/models/user';
 import styles from './styles.module.scss';
+import { MessageStatus } from '../message-status';
 
 type MessageListProps = {
   myUser: User;
@@ -72,17 +70,7 @@ export const MessageList = ({
                 </div>
                 <div className={styles['message-status']}>
                   {message.from.id === myUser.id && (
-                    <img
-                      src={
-                        message.pending
-                          ? PendingIcon
-                          : message.read
-                          ? DoubleCheckIcon
-                          : CheckIcon
-                      }
-                      width={message.read ? 18 : 16}
-                      height={16}
-                    />
+                    <MessageStatus message={message} />
                   )}
                 </div>
               </div>
