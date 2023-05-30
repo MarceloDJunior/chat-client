@@ -1,6 +1,8 @@
 import { FormEvent, useState } from 'react';
 import SendIcon from '@/assets/icons/send.svg';
+import { ReactComponent as AttachmentIcon } from '@/assets/icons/attachment.svg';
 import styles from './styles.module.scss';
+import { FilePicker } from '@/helpers/file-picker';
 
 type SendMessageFieldProps = {
   onSubmit: (text: string) => Promise<boolean>;
@@ -19,8 +21,24 @@ export const SendMessageField = ({
     await onSubmit(text);
   };
 
+  const onFileSelected = (files: File) => {
+    console.log(files);
+  };
+
+  const handleAddAttachmentClick = () => {
+    FilePicker.openFilePicker(onFileSelected, { multiple: true });
+  };
+
   return (
     <form onSubmit={handleSubmit} className={styles.container}>
+      <button
+        type="button"
+        title="Add attachments"
+        className={styles['add-attachment']}
+        onClick={handleAddAttachmentClick}
+      >
+        <AttachmentIcon />
+      </button>
       <input
         type="text"
         name="text"
