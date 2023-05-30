@@ -61,16 +61,17 @@ button {
   cursor: pointer;
   transition: border-color 0.25s, opacity 0.25s;
 
-  &:hover {
+  &:not(:disabled):hover {
     border-color: #646cff;
   }
 
-  &:focus,
-  &:focus-visible {
+  &:not(:disabled):focus,
+  &:not(:disabled):focus-visible {
     outline: 4px auto -webkit-focus-ring-color;
   }
 
   &:disabled {
+    cursor: not-allowed;
     opacity: 0.5;
   }
 }
