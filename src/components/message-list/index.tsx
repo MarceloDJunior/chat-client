@@ -40,13 +40,15 @@ export const MessageList = ({
   return (
     <div className={styles.container}>
       {hasMoreMessages && (
-        <button
-          className={styles['load-more-button']}
-          onClick={handleLoadMoreClick}
-          disabled={isLoadingMore}
-        >
-          Load More
-        </button>
+        <div className={styles['load-more-button-container']}>
+          <button
+            className={styles['load-more-button']}
+            onClick={handleLoadMoreClick}
+            disabled={isLoadingMore}
+          >
+            Load More
+          </button>
+        </div>
       )}
       {orderedMessages?.map((message) => {
         const currentDate = DateHelper.formatDate(message.dateTime);
