@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import { Fragment, useCallback, useMemo, useState } from 'react';
 import { DateHelper } from '@/helpers/date';
+import { FileHelper, FileType } from '@/helpers/file';
 import { Message } from '@/models/message';
 import { User } from '@/models/user';
 import styles from './styles.module.scss';
@@ -37,6 +38,26 @@ export const MessageList = ({
     }, 200);
   }, [onLoadMoreClick]);
 
+  const renderMessageAttachment = (message: Message) => {
+    if (message.fileName && message.fileUrl) {
+      switch (FileHelper.getFileType(message.fileName)) {
+        case FileType.IMAGE:
+          return <img src={message.fileUrl} className={styles.preview} />;
+        case FileType.VIDEO:
+          return (
+            <video src={message.fileUrl} className={styles.preview} controls />
+          );
+        default:
+          return (
+            <a href={message.fileUrl} download title="Download">
+              {message.fileName}
+            </a>
+          );
+      }
+    }
+    return null;
+  };
+
   return (
     <div className={styles.container}>
       {hasMoreMessages && (
@@ -66,6 +87,7 @@ export const MessageList = ({
               })}
             >
               <div className={styles.message}>
+                {renderMessageAttachment(message)}
                 <div className={styles.text}>{message.text}</div>
                 <div className={styles.time}>
                   {DateHelper.formatHoursMinutes(message.dateTime)}

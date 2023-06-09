@@ -37,6 +37,18 @@
       max-width: 80%;
       animation: slide-in-left 0.3s ease-in-out forwards;
 
+      a {
+        color: #ffffff;
+        margin-bottom: 6px;
+      }
+
+      .preview {
+        margin-bottom: 6px;
+        object-fit: contain;
+        max-width: 220px;
+        max-height: 220px;
+      }
+
       .time {
         font-size: 11px;
         font-weight: bold;

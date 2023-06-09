@@ -1,13 +1,15 @@
-import { useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { ConversationsList } from '@/components/conversations-list';
 import { ContactInfo } from '@/components/contact-info';
 import { Loader } from '@/components/loader';
 import { MessageList } from '@/components/message-list';
 import { ModalPageWithNavigation } from '@/components/modal-page-with-navigation';
 import { ProfileHeader } from '@/components/profile-header';
+import { SendAttachmentModal } from '@/components/send-attachment-modal';
 import { SendMessageField } from '@/components/send-message-field';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
 import { useChat } from '@/hooks/use-chat';
+import { Attachment } from '@/models/attachment';
 import styles from './styles.module.scss';
 
 export const Chat = () => {
@@ -28,8 +30,18 @@ export const Chat = () => {
     openChatWith,
     closeChat,
   } = useChat(messagesRef);
+  const [attachment, setAttachment] = useState<Attachment | null>(null);
 
   const isMobileConversationVisible = !!currentContact;
+
+  const handleFileSelected = useCallback((file: File) => {
+    const newAttachment = { file };
+    setAttachment(newAttachment);
+  }, []);
+
+  const handleAttachmentClose = useCallback(() => {
+    setAttachment(null);
+  }, []);
 
   const renderChatComponents = () => {
     if (!user) {
@@ -50,7 +62,17 @@ export const Chat = () => {
             <Loader height={46} width={60} />
           </div>
         ) : null}
-        <SendMessageField onSubmit={sendMessage} />
+        {attachment ? (
+          <SendAttachmentModal
+            attachment={attachment}
+            onClose={handleAttachmentClose}
+            onSubmit={sendMessage}
+          />
+        ) : null}
+        <SendMessageField
+          onSubmit={sendMessage}
+          onFileSelected={handleFileSelected}
+        />
       </div>
     );
   };

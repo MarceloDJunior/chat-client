@@ -127,7 +127,7 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     });
   };
 
-  const sendMessage = async (text: string): Promise<boolean> => {
+  const sendMessage = async (text: string, file?: File): Promise<boolean> => {
     try {
       if (!user || !currentContact) {
         return false;
@@ -142,9 +142,16 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
         read: false,
         pending: true,
       };
+      if (file) {
+        const fileDataURL = URL.createObjectURL(file);
+        message.fileName = file.name;
+        message.fileUrl = fileDataURL;
+      }
       addNewMessage(message);
-      await mutateSendMessage(message);
+      const { fileUrl, fileName } = await mutateSendMessage({ message, file });
       message.pending = false;
+      message.fileUrl = fileUrl;
+      message.fileName = fileName;
       socket?.emit('sendMessage', JSON.stringify(message));
       if (!hasConversationWith(currentContact.id)) {
         addConversation(currentContact, message);

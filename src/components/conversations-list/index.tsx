@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import PlaceholderImage from '@/assets/images/profile-placeholder.jpg';
 import { DateHelper } from '@/helpers/date';
+import { FileHelper, FileType } from '@/helpers/file';
 import { Conversation } from '@/models/conversation';
 import { Contact } from '@/models/contact';
 import { useGetUser } from '@/queries/user';
@@ -74,49 +75,72 @@ export const ConversationsList = ({
     contact,
     lastMessage,
     newMessages,
-  }: Conversation) => (
-    <li key={contact.id} role="button" onClick={() => onContactClick(contact)}>
-      <img
-        src={contact.picture ?? PlaceholderImage}
-        alt="Picture"
-        className={styles.picture}
-      />
-      <div className={styles.wrapper}>
-        <div className={styles['contact-info']}>
-          <div className={styles.name} title={contact.name}>
-            {contact.name}
+  }: Conversation) => {
+    const renderLastMessageText = () => {
+      if (lastMessage?.text) {
+        return lastMessage.text;
+      }
+      if (lastMessage?.fileName) {
+        switch (FileHelper.getFileType(lastMessage.fileName)) {
+          case FileType.IMAGE:
+            return 'Sent image';
+          case FileType.VIDEO:
+            return 'Sent video';
+          default:
+            return 'Sent file';
+        }
+      }
+      return '';
+    };
+
+    return (
+      <li
+        key={contact.id}
+        role="button"
+        onClick={() => onContactClick(contact)}
+      >
+        <img
+          src={contact.picture ?? PlaceholderImage}
+          alt="Picture"
+          className={styles.picture}
+        />
+        <div className={styles.wrapper}>
+          <div className={styles['contact-info']}>
+            <div className={styles.name} title={contact.name}>
+              {contact.name}
+            </div>
+            {lastMessage && (
+              <div className={styles['last-message']}>
+                {lastMessage.from.id === user?.id && (
+                  <MessageStatus
+                    message={lastMessage}
+                    className={styles.icon}
+                    color="#b5b5b5"
+                  />
+                )}
+                <span>{renderLastMessageText()}</span>
+              </div>
+            )}
+            {contact.status === 'online' && (
+              <span className={classNames(styles.status, styles.online)}>
+                {contact.status}
+              </span>
+            )}
           </div>
-          {lastMessage && (
-            <div className={styles['last-message']}>
-              {lastMessage.from.id === user?.id && (
-                <MessageStatus
-                  message={lastMessage}
-                  className={styles.icon}
-                  color="#b5b5b5"
-                />
-              )}
-              <span>{lastMessage.text}</span>
-            </div>
-          )}
-          {contact.status === 'online' && (
-            <span className={classNames(styles.status, styles.online)}>
-              {contact.status}
-            </span>
-          )}
+          <div className={styles['last-message-wrapper']}>
+            {lastMessage && (
+              <div className={styles.time}>
+                {DateHelper.formatHoursMinutes(lastMessage.dateTime)}
+              </div>
+            )}
+            {!!newMessages && (
+              <span className={styles['new-messages']}>{newMessages}</span>
+            )}
+          </div>
         </div>
-        <div className={styles['last-message-wrapper']}>
-          {lastMessage && (
-            <div className={styles.time}>
-              {DateHelper.formatHoursMinutes(lastMessage.dateTime)}
-            </div>
-          )}
-          {!!newMessages && (
-            <span className={styles['new-messages']}>{newMessages}</span>
-          )}
-        </div>
-      </div>
-    </li>
-  );
+      </li>
+    );
+  };
 
   return (
     <div className={styles.container}>

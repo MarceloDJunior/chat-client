@@ -6,11 +6,13 @@ import { FilePicker } from '@/helpers/file-picker';
 
 type SendMessageFieldProps = {
   onSubmit: (text: string) => Promise<boolean>;
+  onFileSelected: (file: File) => void;
   onFocus?: () => void;
 };
 
 export const SendMessageField = ({
   onSubmit,
+  onFileSelected,
   onFocus,
 }: SendMessageFieldProps) => {
   const [text, setText] = useState<string>('');
@@ -21,12 +23,8 @@ export const SendMessageField = ({
     await onSubmit(text);
   };
 
-  const onFileSelected = (files: File) => {
-    console.log(files);
-  };
-
   const handleAddAttachmentClick = () => {
-    FilePicker.openFilePicker(onFileSelected, { multiple: true });
+    FilePicker.openFilePicker(onFileSelected);
   };
 
   return (
