@@ -364,7 +364,10 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
       !isSentFromMe && isAtBottom && isTabActive;
 
     if (isSentFromMe || isSentFromContactAndIsChatActive) {
-      scrollToRecentMessage();
+      // Give some time to render the last message
+      setTimeout(() => {
+        scrollToRecentMessage();
+      }, 200);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastMessage?.id]);
