@@ -45,6 +45,7 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const [text, setText] = useState<string>('');
 
   const openChatWith = useCallback((contact: Contact) => {
     setCurrentContact(contact);
@@ -132,6 +133,9 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
       if (!user || !currentContact) {
         return false;
       }
+      if (!text && !file) {
+        return false;
+      }
       const tempId = generateUniqueId();
       const message: Message = {
         id: tempId,
@@ -147,6 +151,7 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
         message.fileName = file.name;
         message.fileUrl = fileDataURL;
       }
+      setText('');
       addNewMessage(message);
       const { fileUrl, fileName } = await mutateSendMessage({ message, file });
       message.pending = false;
@@ -437,6 +442,8 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     hasMoreMessages,
     isLoading,
     onlineUserIds,
+    text,
+    setText,
     sendMessage,
     loadMoreMessages,
     updateMessagesRead,

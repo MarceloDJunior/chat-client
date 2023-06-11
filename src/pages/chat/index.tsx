@@ -25,6 +25,8 @@ export const Chat = () => {
     hasMoreMessages,
     isLoading,
     onlineUserIds,
+    text,
+    setText,
     sendMessage,
     loadMoreMessages,
     updateMessagesRead,
@@ -35,10 +37,13 @@ export const Chat = () => {
 
   const isMobileConversationVisible = !!currentContact;
 
-  const handleFileSelected = useCallback((file: File) => {
-    const newAttachment = { file };
-    setAttachment(newAttachment);
-  }, []);
+  const handleFileSelected = useCallback(
+    (file: File) => {
+      const newAttachment: Attachment = { file, subtitle: text };
+      setAttachment(newAttachment);
+    },
+    [text],
+  );
 
   const handleAttachmentClose = useCallback(() => {
     setAttachment(null);
@@ -71,6 +76,8 @@ export const Chat = () => {
           />
         ) : null}
         <SendMessageField
+          text={text}
+          setText={setText}
           onSubmit={sendMessage}
           onFileSelected={handleFileSelected}
         />

@@ -1,22 +1,24 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent } from 'react';
 import SendIcon from '@/assets/icons/send.svg';
 import { ReactComponent as AttachmentIcon } from '@/assets/icons/attachment.svg';
-import styles from './styles.module.scss';
 import { FilePicker } from '@/helpers/file-picker';
+import styles from './styles.module.scss';
 
 type SendMessageFieldProps = {
+  text: string;
+  setText: (value: string) => void;
   onSubmit: (text: string) => Promise<boolean>;
   onFileSelected: (file: File) => void;
   onFocus?: () => void;
 };
 
 export const SendMessageField = ({
+  text,
+  setText,
   onSubmit,
   onFileSelected,
   onFocus,
 }: SendMessageFieldProps) => {
-  const [text, setText] = useState<string>('');
-
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setText('');
