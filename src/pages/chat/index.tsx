@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { ConversationsList } from '@/components/conversations-list';
 import { ContactInfo } from '@/components/contact-info';
+import { DragNDropZone } from '@/components/drag-n-drop-zone';
 import { Loader } from '@/components/loader';
 import { MessageList } from '@/components/message-list';
 import { ModalPageWithNavigation } from '@/components/modal-page-with-navigation';
@@ -104,12 +105,15 @@ export const Chat = () => {
             {renderChatComponents()}
           </ModalPageWithNavigation>
         ) : currentContact ? ( // render chat components in desktop if contact is selected
-          <>
+          <DragNDropZone
+            className={styles.dropzone}
+            onDropFiles={(files) => handleFileSelected(files[0])}
+          >
             <div className={styles['contact-header']}>
               <ContactInfo contact={currentContact} />
             </div>
             {renderChatComponents()}
-          </>
+          </DragNDropZone>
         ) : (
           <h3>Select a user to start chatting</h3>
         )}

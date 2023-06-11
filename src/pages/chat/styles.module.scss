@@ -44,6 +44,14 @@
       display: flex;
     }
 
+    .dropzone {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      z-index: 3;
+      position: relative;
+    }
+
     .contact-header {
       padding: 24px 20px;
       background-color: #1c2437;
