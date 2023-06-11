@@ -24,6 +24,13 @@
     flex-direction: column;
     align-items: center;
 
+    h3 {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
     .preview {
       flex: 1;
       display: flex;
