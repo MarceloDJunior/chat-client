@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Attachment } from '@/models/attachment';
+import SendIcon from '@/assets/icons/send.svg';
 import { ReactComponent as CloseIcon } from '@/assets/icons/close.svg';
 import { ReactComponent as DocumentIcon } from '@/assets/icons/document.svg';
-import SendIcon from '@/assets/icons/send.svg';
-import styles from './styles.module.scss';
+import { Attachment } from '@/models/attachment';
 import { FileHelper, FileType } from '@/helpers/file';
 import { Loader } from '../loader';
+import styles from './styles.module.scss';
 
 type SendAttachmentModalProps = {
   attachment: Attachment;
@@ -79,7 +79,7 @@ export const SendAttachmentModal = ({
       <div className={styles.content}>
         <h3>{attachment.file.name}</h3>
         <div className={styles.preview}>
-          <>{getPreview()}</>
+          {getPreview()}
           <div className={styles.size}>
             {FileHelper.bytesToKilobytes(attachment.file.size)} KB
           </div>
