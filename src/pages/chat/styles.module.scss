@@ -59,7 +59,8 @@
       .messages {
         width: 100%;
         flex: 1 1 0;
-        overflow: auto;
+        overflow-y: auto;
+        overflow-x: hidden;
         padding: 20px;
       }
     }
