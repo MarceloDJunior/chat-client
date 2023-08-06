@@ -75,3 +75,26 @@ button {
     opacity: 0.5;
   }
 }
+
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+*:not(body)::-webkit-scrollbar {
+  opacity: 0;
+}
+
+*:not(body):hover::-webkit-scrollbar {
+  opacity: 0.6;
+}
+
+::-webkit-scrollbar-track {
+  background: #434343;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid #434343;
+  background: #a0a0a0;
+  border-radius: 10px;
+}
