@@ -1,8 +1,9 @@
-@use '@/styles/breakpoints.module.scss' as breakpoints;
+@use '@/styles/breakpoints.module.scss'as breakpoints;
 
 .container {
   width: 100%;
   min-height: 100vh;
+  max-height: 100vh;
   display: flex;
   flex-direction: column;
 
@@ -23,8 +24,10 @@
   .sidebar {
     flex: 1;
     overflow: hidden;
-    padding: 8px 20px;
+    padding: 8px 8px;
     background-color: #181e2d;
+    display: flex;
+    flex-direction: column;
 
     @include breakpoints.sm {
       flex: 1 0 300px;
@@ -67,7 +70,8 @@
       .messages {
         width: 100%;
         flex: 1 1 0;
-        overflow: auto;
+        overflow-y: auto;
+        overflow-x: hidden;
         padding: 20px;
       }
     }
@@ -84,4 +88,5 @@
   align-items: center;
   justify-content: center;
   background-color: #171c28;
+  z-index: 1;
 }
