@@ -1,20 +1,27 @@
 const PICKER_ID = 'file-picker-input-element';
 
-type FileSelectedCallback = (files: File) => void;
-
 type FilePickerOptions = {
   allowedFileTypes?: string[];
   multiple?: boolean;
 };
 
+type FileSelectedCallbackSingle = (file: File) => void;
+type FileSelectedCallbackMultiple = (files: File[]) => void;
+
+// Determine the return type based on the options
+type FileSelectedCallback<T extends FilePickerOptions> =
+  T['multiple'] extends true
+    ? FileSelectedCallbackMultiple
+    : FileSelectedCallbackSingle;
+
 export class FilePicker {
   private inputFile: HTMLInputElement | null = null;
   private options?: FilePickerOptions;
-  private callback: FileSelectedCallback | null = null;
+  private callback: FileSelectedCallback<any> | null = null;
 
-  public static openFilePicker = (
-    callback: FileSelectedCallback,
-    options?: FilePickerOptions,
+  public static openFilePicker = <GenericOptionsType extends FilePickerOptions>(
+    callback: FileSelectedCallback<GenericOptionsType>,
+    options?: GenericOptionsType,
   ) => {
     const self = new FilePicker();
     self.options = options;
@@ -51,24 +58,36 @@ export class FilePicker {
       const files = (<HTMLInputElement>event.target)?.files;
       if (files && files.length > 0) {
         if (this.inputFile?.multiple) {
+          const validFiles: File[] = [];
           Array.from(files).forEach((file: File) => {
-            this.checkFileType(file);
+            if (this.validateFileType(file)) {
+              validFiles.push(file);
+            }
           });
+          if (this.callback) {
+            const callback = this.callback as FileSelectedCallbackMultiple;
+            callback(validFiles);
+          }
         } else {
-          this.checkFileType(files[0]);
+          const file = files[0];
+          if (file && this.callback) {
+            const callback = this.callback as FileSelectedCallbackSingle;
+            callback(file);
+          }
         }
       }
     });
   }
 
-  private checkFileType(file: File) {
+  private validateFileType(file: File): boolean {
     const extension = this.getFileExtension(file.name);
     if (
       !this.options?.allowedFileTypes ||
       (extension && this.options?.allowedFileTypes.includes(extension))
     ) {
-      this.callback?.(file);
+      return true;
     }
+    return false;
   }
 
   private getFileExtension(fileName: string): string | null {

@@ -8,7 +8,7 @@ type SendMessageFieldProps = {
   text: string;
   setText: (value: string) => void;
   onSubmit: (text: string) => Promise<boolean>;
-  onFileSelected: (file: File) => void;
+  onFilesSelected: (files: File[]) => void;
   onFocus?: () => void;
 };
 
@@ -16,7 +16,7 @@ export const SendMessageField = ({
   text,
   setText,
   onSubmit,
-  onFileSelected,
+  onFilesSelected,
   onFocus,
 }: SendMessageFieldProps) => {
   const handleSubmit = async (event: FormEvent) => {
@@ -26,7 +26,7 @@ export const SendMessageField = ({
   };
 
   const handleAddAttachmentClick = () => {
-    FilePicker.openFilePicker(onFileSelected);
+    FilePicker.openFilePicker(onFilesSelected, { multiple: true });
   };
 
   return (

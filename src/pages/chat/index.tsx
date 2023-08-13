@@ -33,20 +33,23 @@ export const Chat = () => {
     openChatWith,
     closeChat,
   } = useChat(messagesRef);
-  const [attachment, setAttachment] = useState<Attachment | null>(null);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
 
   const isMobileConversationVisible = !!currentContact;
 
-  const handleFileSelected = useCallback(
-    (file: File) => {
-      const newAttachment: Attachment = { file, subtitle: text };
-      setAttachment(newAttachment);
+  const handleFilesSelected = useCallback(
+    (files: File[]) => {
+      const attachments: Attachment[] = files.map((file, index) => ({
+        file,
+        subtitle: index === 0 ? text : undefined,
+      }));
+      setAttachments(attachments);
     },
     [text],
   );
 
-  const handleAttachmentClose = useCallback(() => {
-    setAttachment(null);
+  const handleAttachmentsClose = useCallback(() => {
+    setAttachments([]);
   }, []);
 
   const renderChatComponents = () => {
@@ -68,10 +71,10 @@ export const Chat = () => {
             <Loader height={46} width={60} />
           </div>
         ) : null}
-        {attachment ? (
+        {attachments.length > 0 ? (
           <SendAttachmentModal
-            attachment={attachment}
-            onClose={handleAttachmentClose}
+            attachments={attachments}
+            onClose={handleAttachmentsClose}
             onSubmit={sendMessage}
           />
         ) : null}
@@ -79,7 +82,7 @@ export const Chat = () => {
           text={text}
           setText={setText}
           onSubmit={sendMessage}
-          onFileSelected={handleFileSelected}
+          onFilesSelected={handleFilesSelected}
         />
       </div>
     );
@@ -114,7 +117,7 @@ export const Chat = () => {
         ) : currentContact ? ( // render chat components in desktop if contact is selected
           <DragNDropZone
             className={styles.dropzone}
-            onDropFiles={(files) => handleFileSelected(files[0])}
+            onDropFiles={handleFilesSelected}
           >
             <div className={styles['contact-header']}>
               <ContactInfo contact={currentContact} />

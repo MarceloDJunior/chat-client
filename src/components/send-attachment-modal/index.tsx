@@ -4,11 +4,12 @@ import { ReactComponent as CloseIcon } from '@/assets/icons/close.svg';
 import { ReactComponent as DocumentIcon } from '@/assets/icons/document.svg';
 import { Attachment } from '@/models/attachment';
 import { FileHelper, FileType } from '@/helpers/file';
+import { Carousel } from '../carousel';
 import { Loader } from '../loader';
 import styles from './styles.module.scss';
 
 type SendAttachmentModalProps = {
-  attachment: Attachment;
+  attachments: Attachment[];
   onClose: () => void;
   onSubmit: (text: string, file: File) => void;
 };
@@ -19,20 +20,31 @@ type Preview = {
   dataURL?: string;
 };
 
+type AttachmentEditable = {
+  file: File;
+  preview: Preview;
+  subtitle?: string;
+};
+
 export const SendAttachmentModal = ({
-  attachment,
+  attachments,
   onClose,
   onSubmit,
 }: SendAttachmentModalProps) => {
-  const [subtitle, setSubtitle] = useState(attachment.subtitle ?? '');
-  const [preview, setPreview] = useState<Preview>({ loaded: false });
+  const [currentAttachments, setCurrentAttachments] = useState<
+    AttachmentEditable[]
+  >([]);
 
-  const handleSubmit = useCallback(() => {
-    onSubmit(subtitle ?? '', attachment.file);
+  const handleSubmit = useCallback(async () => {
+    for (const attachment of currentAttachments) {
+      onSubmit(attachment.subtitle ?? '', attachment.file);
+    }
     onClose();
-  }, [attachment.file, onClose, onSubmit, subtitle]);
+  }, [currentAttachments, onClose, onSubmit]);
 
-  const getPreview = () => {
+  const getPreview = (attachment: AttachmentEditable) => {
+    const preview = attachment.preview;
+
     if (!preview.loaded) {
       return <Loader width={50} height={50} />;
     }
@@ -51,19 +63,60 @@ export const SendAttachmentModal = ({
     }
   };
 
+  const updateAttachmentPreview = (fileName: string, previewData: Preview) => {
+    setCurrentAttachments((attachments) => {
+      return attachments.map((attachment) => {
+        if (attachment.file.name === fileName) {
+          return {
+            ...attachment,
+            preview: previewData,
+          };
+        }
+        return attachment;
+      });
+    });
+  };
+
+  const updateAttachmentSubtitle = (fileName: string, subtitle: string) => {
+    setCurrentAttachments((attachments) => {
+      return attachments.map((attachment) => {
+        if (attachment.file.name === fileName) {
+          return {
+            ...attachment,
+            subtitle,
+          };
+        }
+        return attachment;
+      });
+    });
+  };
+
   useEffect(() => {
-    const loadPreview = async () => {
-      setPreview({ loaded: false });
+    const loadPreview = async (attachment: AttachmentEditable) => {
+      updateAttachmentPreview(attachment.file.name, { loaded: false });
       const dataURL = URL.createObjectURL(attachment.file);
       const type = FileHelper.getFileType(attachment.file);
-      setPreview({
+      updateAttachmentPreview(attachment.file.name, {
         dataURL,
         type,
         loaded: true,
       });
     };
-    loadPreview();
-  }, [attachment.file]);
+
+    const initialAttachments = attachments.map((attachment) => ({
+      file: attachment.file,
+      subtitle: attachment.subtitle,
+      preview: {
+        loaded: false,
+      },
+    }));
+
+    setCurrentAttachments(initialAttachments);
+
+    for (const attachment of initialAttachments) {
+      loadPreview(attachment);
+    }
+  }, [attachments]);
 
   return (
     <div className={styles.container}>
@@ -77,25 +130,39 @@ export const SendAttachmentModal = ({
         </button>
       </div>
       <div className={styles.content}>
-        <h3>{attachment.file.name}</h3>
-        <div className={styles.preview}>
-          {getPreview()}
-          <div className={styles.size}>
-            {FileHelper.bytesToKilobytes(attachment.file.size)} KB
-          </div>
-        </div>
-        <form onSubmit={handleSubmit} className={styles['submit-container']}>
-          <input
-            type="text"
-            name="text"
-            onChange={(event) => setSubtitle(event.target.value)}
-            value={subtitle}
-            placeholder="Write message..."
-          />
-          <button type="submit" title="Send">
-            <img src={SendIcon} alt="Send" width={32} height={32} />
-          </button>
-        </form>
+        <Carousel>
+          {currentAttachments.map((attachment) => (
+            <div className={styles.item} key={attachment.file.name}>
+              <h3>{attachment.file.name}</h3>
+              <div className={styles.preview}>
+                {getPreview(attachment)}
+                <div className={styles.size}>
+                  {FileHelper.bytesToKilobytes(attachment.file.size)} KB
+                </div>
+              </div>
+              <form
+                onSubmit={handleSubmit}
+                className={styles['submit-container']}
+              >
+                <input
+                  type="text"
+                  name="text"
+                  onChange={(event) =>
+                    updateAttachmentSubtitle(
+                      attachment.file.name,
+                      event.target.value,
+                    )
+                  }
+                  value={attachment.subtitle}
+                  placeholder="Write message..."
+                />
+                <button type="submit" title="Send">
+                  <img src={SendIcon} alt="Send" width={32} height={32} />
+                </button>
+              </form>
+            </div>
+          ))}
+        </Carousel>
       </div>
     </div>
   );
