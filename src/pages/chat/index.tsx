@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { ConversationsList } from '@/components/conversations-list';
 import { ContactInfo } from '@/components/contact-info';
 import { DragNDropZone } from '@/components/drag-n-drop-zone';
@@ -71,13 +72,15 @@ export const Chat = () => {
             <Loader height={46} width={60} />
           </div>
         ) : null}
-        {attachments.length > 0 ? (
-          <SendAttachmentModal
-            attachments={attachments}
-            onClose={handleAttachmentsClose}
-            onSubmit={sendMessage}
-          />
-        ) : null}
+        <AnimatePresence>
+          {attachments.length > 0 ? (
+            <SendAttachmentModal
+              attachments={attachments}
+              onClose={handleAttachmentsClose}
+              onSubmit={sendMessage}
+            />
+          ) : null}
+        </AnimatePresence>
         <SendMessageField
           text={text}
           setText={setText}

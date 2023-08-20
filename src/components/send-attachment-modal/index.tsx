@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import SendIcon from '@/assets/icons/send.svg';
 import { ReactComponent as CloseIcon } from '@/assets/icons/close.svg';
 import { ReactComponent as DocumentIcon } from '@/assets/icons/document.svg';
@@ -119,7 +120,12 @@ export const SendAttachmentModal = ({
   }, [attachments]);
 
   return (
-    <div className={styles.container}>
+    <motion.div
+      className={styles.container}
+      initial={{ scale: 0.2, opacity: 0.7 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0.3, opacity: 0 }}
+    >
       <div>
         <button
           type="button"
@@ -164,6 +170,6 @@ export const SendAttachmentModal = ({
           ))}
         </Carousel>
       </div>
-    </div>
+    </motion.div>
   );
 };
