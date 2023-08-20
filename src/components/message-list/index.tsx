@@ -1,17 +1,24 @@
-import classNames from 'classnames';
 import { Fragment, useCallback, useMemo, useState } from 'react';
+import classNames from 'classnames';
+import { ReactComponent as DownloadIcon } from '@/assets/icons/download.svg';
 import { DateHelper } from '@/helpers/date';
 import { FileHelper, FileType } from '@/helpers/file';
 import { Message } from '@/models/message';
 import { User } from '@/models/user';
-import styles from './styles.module.scss';
 import { MessageStatus } from '../message-status';
+import { MediaViewer } from '../media-viewer';
+import styles from './styles.module.scss';
 
 type MessageListProps = {
   myUser: User;
   messages: Message[];
   hasMoreMessages: boolean;
   onLoadMoreClick: () => void;
+};
+
+type Media = {
+  fileName: string;
+  fileUrl: string;
 };
 
 export const MessageList = ({
@@ -22,6 +29,7 @@ export const MessageList = ({
 }: MessageListProps) => {
   let lastMessageDate: string;
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [currentOpenMedia, setCurrentOpenMedia] = useState<Media>();
 
   const orderedMessages = useMemo(() => {
     const orderedMessages = [...messages];
@@ -38,19 +46,47 @@ export const MessageList = ({
     }, 200);
   }, [onLoadMoreClick]);
 
-  const renderMessageAttachment = (message: Message) => {
+  const renderMessageMedia = (message: Message) => {
     if (message.fileName && message.fileUrl) {
+      const openVideo = () =>
+        setCurrentOpenMedia({
+          fileName: message.fileName ?? '',
+          fileUrl: message.fileUrl ?? '',
+        });
+
       switch (FileHelper.getFileType(message.fileName)) {
         case FileType.IMAGE:
-          return <img src={message.fileUrl} className={styles.preview} />;
+          return (
+            <img
+              src={message.fileUrl}
+              className={styles['img-preview']}
+              onClick={openVideo}
+            />
+          );
         case FileType.VIDEO:
           return (
-            <video src={message.fileUrl} className={styles.preview} controls />
+            <div
+              role="button"
+              onClick={openVideo}
+              className={styles['video-preview']}
+            >
+              <video
+                src={message.fileUrl}
+                style={{ pointerEvents: 'none' }}
+                onClick={openVideo}
+                controls
+              />
+            </div>
           );
         default:
           return (
-            <a href={message.fileUrl} download title="Download">
-              {message.fileName}
+            <a
+              href={message.fileUrl}
+              download
+              title="Download"
+              className={styles.download}
+            >
+              {message.fileName} <DownloadIcon />
             </a>
           );
       }
@@ -87,7 +123,7 @@ export const MessageList = ({
               })}
             >
               <div className={styles.message}>
-                {renderMessageAttachment(message)}
+                {renderMessageMedia(message)}
                 <div className={styles.text}>{message.text}</div>
                 <div className={styles.time}>
                   {DateHelper.formatHoursMinutes(message.dateTime)}
@@ -102,6 +138,13 @@ export const MessageList = ({
           </Fragment>
         );
       })}
+      {currentOpenMedia && (
+        <MediaViewer
+          fileName={currentOpenMedia.fileName}
+          fileUrl={currentOpenMedia.fileUrl}
+          onClose={() => setCurrentOpenMedia(undefined)}
+        />
+      )}
     </div>
   );
 };

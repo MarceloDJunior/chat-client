@@ -5,7 +5,7 @@ export enum FileType {
 }
 
 const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-const videoTypes = ['mp4', 'webm', 'ogg'];
+const videoTypes = ['mp4', 'webm', 'ogg', 'mov', 'quicktime'];
 
 export class FileHelper {
   public static getFileExtension(fileName: string): string | null {
@@ -38,12 +38,9 @@ export class FileHelper {
   }
 
   private static getFileTypeFromString(fileName: string): FileType {
-    const imgTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-    const videoTypes = ['mp4', 'webm', 'ogg'];
-
     const extension = this.getFileExtension(fileName)?.toLowerCase();
     if (extension) {
-      if (imgTypes.includes(extension)) {
+      if (imageTypes.includes(extension)) {
         return FileType.IMAGE;
       }
       if (videoTypes.includes(extension)) {
