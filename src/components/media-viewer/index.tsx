@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { ReactComponent as CloseIcon } from '@/assets/icons/close.svg';
 import { ReactComponent as DownloadIcon } from '@/assets/icons/download.svg';
 import { FileHelper, FileType } from '@/helpers/file';
@@ -7,12 +8,14 @@ import styles from './styles.module.scss';
 type MediaViewerProps = {
   fileName: string;
   fileUrl: string;
+  animationId: string;
   onClose: () => void;
 };
 
 export const MediaViewer = ({
   fileName,
   fileUrl,
+  animationId,
   onClose,
 }: MediaViewerProps) => {
   const ref = useOutsideClick(onClose);
@@ -20,9 +23,16 @@ export const MediaViewer = ({
   const renderMedia = () => {
     switch (FileHelper.getFileType(fileName)) {
       case FileType.IMAGE:
-        return <img src={fileUrl} />;
+        return <motion.img src={fileUrl} layoutId={animationId} />;
       case FileType.VIDEO:
-        return <video src={fileUrl} controls autoPlay />;
+        return (
+          <motion.video
+            src={fileUrl}
+            controls
+            autoPlay
+            layoutId={animationId}
+          />
+        );
       default:
         return (
           <a href={fileUrl} download title="Download">
@@ -33,7 +43,12 @@ export const MediaViewer = ({
   };
 
   return (
-    <div className={styles.overlay}>
+    <motion.div
+      className={styles.overlay}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
       <div className={styles.container}>
         <div className={styles.toolbar}>
           <a href={fileUrl} download>
@@ -60,6 +75,6 @@ export const MediaViewer = ({
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

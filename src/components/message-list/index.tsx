@@ -1,5 +1,6 @@
 import { Fragment, useCallback, useMemo, useState } from 'react';
 import classNames from 'classnames';
+import { motion } from 'framer-motion';
 import { ReactComponent as DownloadIcon } from '@/assets/icons/download.svg';
 import { DateHelper } from '@/helpers/date';
 import { FileHelper, FileType } from '@/helpers/file';
@@ -19,6 +20,7 @@ type MessageListProps = {
 type Media = {
   fileName: string;
   fileUrl: string;
+  animationId: string;
 };
 
 export const MessageList = ({
@@ -48,16 +50,19 @@ export const MessageList = ({
 
   const renderMessageMedia = (message: Message) => {
     if (message.fileName && message.fileUrl) {
+      const animationId = String(message.id);
       const openVideo = () =>
         setCurrentOpenMedia({
           fileName: message.fileName ?? '',
           fileUrl: message.fileUrl ?? '',
+          animationId,
         });
 
       switch (FileHelper.getFileType(message.fileName)) {
         case FileType.IMAGE:
           return (
-            <img
+            <motion.img
+              layoutId={animationId}
               src={message.fileUrl}
               className={styles['img-preview']}
               onClick={openVideo}
@@ -65,7 +70,8 @@ export const MessageList = ({
           );
         case FileType.VIDEO:
           return (
-            <div
+            <motion.div
+              layoutId={animationId}
               role="button"
               onClick={openVideo}
               className={styles['video-preview']}
@@ -76,7 +82,7 @@ export const MessageList = ({
                 onClick={openVideo}
                 controls
               />
-            </div>
+            </motion.div>
           );
         default:
           return (
@@ -142,6 +148,7 @@ export const MessageList = ({
         <MediaViewer
           fileName={currentOpenMedia.fileName}
           fileUrl={currentOpenMedia.fileUrl}
+          animationId={currentOpenMedia.animationId}
           onClose={() => setCurrentOpenMedia(undefined)}
         />
       )}
