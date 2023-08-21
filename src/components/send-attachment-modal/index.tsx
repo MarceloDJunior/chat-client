@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import SendIcon from '@/assets/icons/send.svg';
 import { ReactComponent as CloseIcon } from '@/assets/icons/close.svg';
@@ -36,12 +36,16 @@ export const SendAttachmentModal = ({
     AttachmentEditable[]
   >([]);
 
-  const handleSubmit = useCallback(async () => {
-    for (const attachment of currentAttachments) {
-      onSubmit(attachment.subtitle ?? '', attachment.file);
-    }
-    onClose();
-  }, [currentAttachments, onClose, onSubmit]);
+  const handleSubmit = useCallback(
+    async (event: FormEvent) => {
+      event.preventDefault();
+      for (const attachment of currentAttachments) {
+        onSubmit(attachment.subtitle ?? '', attachment.file);
+      }
+      onClose();
+    },
+    [currentAttachments, onClose, onSubmit],
+  );
 
   const getPreview = (attachment: AttachmentEditable) => {
     const preview = attachment.preview;
