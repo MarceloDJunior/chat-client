@@ -1,27 +1,43 @@
+@use '@/styles/breakpoints.module.scss'as breakpoints;
+
 .container {
   display: flex;
-  padding: 20px;
+  padding: 12px;
   background-color: #1c2437;
   border-radius: 8px;
 
+  @include breakpoints.sm {
+    padding: 20px;
+  }
+
   input {
     flex: 1;
-    margin-right: 12px;
-    padding: 18px 18px;
+    margin-right: 14px;
+    padding: 4px 16px;
+    height: 48px;
     font-size: 16px;
     border-radius: 8px;
     background-color: #283045;
     border: none;
+
+    @include breakpoints.sm {
+      height: 54px;
+    }
   }
 
   button {
-    height: 56px;
-    width: 56px;
+    height: 48px;
+    width: 40px;
     background-color: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
+
+    @include breakpoints.sm {
+      height: 56px;
+      width: 56px;
+    }
   }
 
   .add-attachment {
