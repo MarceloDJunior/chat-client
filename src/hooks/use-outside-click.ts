@@ -8,9 +8,17 @@ export const useOutsideClick = (
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const targetElement = event.target as HTMLElement; // clicked element
-      // If the clicked element has an onclick event or an href attribute, don't run the callback
-      if (targetElement.onclick || targetElement.getAttribute('href')) {
-        return;
+      // Check if the clicked element or any of its parents is a button or a link
+      let currentNode: HTMLElement | null = targetElement;
+      while (currentNode) {
+        const isClickableElement =
+          currentNode.tagName === 'A' ||
+          currentNode.tagName === 'BUTTON' ||
+          currentNode.getAttribute('onclick');
+        if (isClickableElement) {
+          return;
+        }
+        currentNode = currentNode.parentElement;
       }
       if (ref.current && !ref.current.contains(event.target as Node)) {
         callback();
