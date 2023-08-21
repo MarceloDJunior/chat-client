@@ -59,8 +59,9 @@
       .img-preview {
         margin-bottom: 6px;
         object-fit: contain;
+        aspect-ratio: 4 / 3; /* adjust this to match your image's aspect ratio */
+        width: 100%;
         max-width: 220px;
-        max-height: 220px;
         border-radius: 10px;
         cursor: pointer
       }
@@ -72,8 +73,9 @@
         video {
           pointer-events: none;
           object-fit: contain;
+          aspect-ratio: 4 / 3; /* adjust this to match your image's aspect ratio */
+          width: 100%;
           max-width: 220px;
-          max-height: 220px;
           border-radius: 10px;
         }
       }
