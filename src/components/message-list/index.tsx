@@ -76,12 +76,7 @@ export const MessageList = ({
               onClick={openVideo}
               className={styles['video-preview']}
             >
-              <video
-                src={message.fileUrl}
-                style={{ pointerEvents: 'none' }}
-                onClick={openVideo}
-                controls
-              />
+              <video src={message.fileUrl} onClick={openVideo} controls />
             </motion.div>
           );
         default:

@@ -1,4 +1,5 @@
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { ReactComponent as LeftArrowIcon } from '@/assets/icons/left-arrow.svg';
 import { ReactComponent as RightArrowIcon } from '@/assets/icons/right-arrow.svg';
 import styles from './styles.module.scss';
@@ -37,9 +38,17 @@ export const Carousel = ({ children }: CarouselProps) => {
           <LeftArrowIcon />
         </button>
       )}
-      {children.map((item, index) => (
-        <Fragment key={index}>{index === current && item}</Fragment>
-      ))}
+      <motion.div
+        className={styles.content}
+        animate={{ x: -100 * current + '%' }}
+        transition={{ duration: 0.3 }}
+      >
+        {children.map((item, index) => (
+          <div key={index} className={styles.item}>
+            {item}
+          </div>
+        ))}
+      </motion.div>
       {children.length > 1 && (
         <button
           onClick={nextSlide}
