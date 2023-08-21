@@ -8,4 +8,6 @@ export type Message = {
   dateTime: Date;
   read: boolean;
   pending?: boolean;
+  fileUrl?: string;
+  fileName?: string;
 };

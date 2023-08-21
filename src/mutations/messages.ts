@@ -8,6 +8,11 @@ type GetMessagesParams = {
   page: number;
 };
 
+type SendMessageParams = {
+  message: Message;
+  file?: File;
+};
+
 const getMessages = async ({
   contactId,
   page,
@@ -24,16 +29,25 @@ const getMessages = async ({
 export const useGetMessagesMutation = () =>
   useMutation('getMessages', getMessages);
 
-const sendMessage = async (message: Message): Promise<number> => {
-  const response = await api.post('/conversations/send-message', {
-    toId: message.to.id,
-    text: message.text,
-    dateTime: message.dateTime,
+const sendMessage = async ({
+  message,
+  file,
+}: SendMessageParams): Promise<Message> => {
+  const formData = new FormData();
+  const dateString = new Date(message.dateTime).toUTCString();
+  formData.append('toId', String(message.to.id));
+  formData.append('text', String(message.text));
+  formData.append('dateTime', dateString);
+  if (file) {
+    formData.append('file', file);
+  }
+  const response = await api.post('/conversations/send-message', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
   if (response.status !== 201) {
     throw new Error('An error occurred while sending message');
   }
-  return response.data.id;
+  return response.data;
 };
 
 export const useSendMessageMutation = () =>

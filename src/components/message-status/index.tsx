@@ -16,15 +16,20 @@ export const MessageStatus = ({
 }: MessageStatusProps) => {
   const Icon = (props: any) => {
     if (message.pending) {
-      return <PendingIcon {...props} style={{ fill: color }} />;
+      return <PendingIcon {...props} />;
     }
     if (message.read) {
-      return <DoubleCheckIcon {...props} style={{ stroke: color }} />;
+      return <DoubleCheckIcon {...props} />;
     }
-    return <CheckIcon {...props} style={{ stroke: color }} />;
+    return <CheckIcon {...props} />;
   };
 
   return (
-    <Icon className={className} width={message.read ? 18 : 16} height={16} />
+    <Icon
+      className={className}
+      width={message.read ? 18 : 16}
+      height={16}
+      color={color}
+    />
   );
 };

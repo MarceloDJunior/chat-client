@@ -1,16 +1,26 @@
-import classNames from 'classnames';
 import { Fragment, useCallback, useMemo, useState } from 'react';
+import classNames from 'classnames';
+import { motion } from 'framer-motion';
+import { ReactComponent as DownloadIcon } from '@/assets/icons/download.svg';
 import { DateHelper } from '@/helpers/date';
+import { FileHelper, FileType } from '@/helpers/file';
 import { Message } from '@/models/message';
 import { User } from '@/models/user';
-import styles from './styles.module.scss';
 import { MessageStatus } from '../message-status';
+import { MediaViewer } from '../media-viewer';
+import styles from './styles.module.scss';
 
 type MessageListProps = {
   myUser: User;
   messages: Message[];
   hasMoreMessages: boolean;
   onLoadMoreClick: () => void;
+};
+
+type Media = {
+  fileName: string;
+  fileUrl: string;
+  animationId: string;
 };
 
 export const MessageList = ({
@@ -21,6 +31,7 @@ export const MessageList = ({
 }: MessageListProps) => {
   let lastMessageDate: string;
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [currentOpenMedia, setCurrentOpenMedia] = useState<Media>();
 
   const orderedMessages = useMemo(() => {
     const orderedMessages = [...messages];
@@ -37,16 +48,65 @@ export const MessageList = ({
     }, 200);
   }, [onLoadMoreClick]);
 
+  const renderMessageMedia = (message: Message) => {
+    if (message.fileName && message.fileUrl) {
+      const animationId = String(message.id);
+      const openVideo = () =>
+        setCurrentOpenMedia({
+          fileName: message.fileName ?? '',
+          fileUrl: message.fileUrl ?? '',
+          animationId,
+        });
+
+      switch (FileHelper.getFileType(message.fileName)) {
+        case FileType.IMAGE:
+          return (
+            <motion.img
+              layoutId={animationId}
+              src={message.fileUrl}
+              className={styles['img-preview']}
+              onClick={openVideo}
+            />
+          );
+        case FileType.VIDEO:
+          return (
+            <motion.div
+              layoutId={animationId}
+              role="button"
+              onClick={openVideo}
+              className={styles['video-preview']}
+            >
+              <video src={message.fileUrl} onClick={openVideo} controls />
+            </motion.div>
+          );
+        default:
+          return (
+            <a
+              href={message.fileUrl}
+              download
+              title="Download"
+              className={styles.download}
+            >
+              {message.fileName} <DownloadIcon />
+            </a>
+          );
+      }
+    }
+    return null;
+  };
+
   return (
     <div className={styles.container}>
       {hasMoreMessages && (
-        <button
-          className={styles['load-more-button']}
-          onClick={handleLoadMoreClick}
-          disabled={isLoadingMore}
-        >
-          Load More
-        </button>
+        <div className={styles['load-more-button-container']}>
+          <button
+            className={styles['load-more-button']}
+            onClick={handleLoadMoreClick}
+            disabled={isLoadingMore}
+          >
+            Load More
+          </button>
+        </div>
       )}
       {orderedMessages?.map((message) => {
         const currentDate = DateHelper.formatDate(message.dateTime);
@@ -64,6 +124,7 @@ export const MessageList = ({
               })}
             >
               <div className={styles.message}>
+                {renderMessageMedia(message)}
                 <div className={styles.text}>{message.text}</div>
                 <div className={styles.time}>
                   {DateHelper.formatHoursMinutes(message.dateTime)}
@@ -78,6 +139,14 @@ export const MessageList = ({
           </Fragment>
         );
       })}
+      {currentOpenMedia && (
+        <MediaViewer
+          fileName={currentOpenMedia.fileName}
+          fileUrl={currentOpenMedia.fileUrl}
+          animationId={currentOpenMedia.animationId}
+          onClose={() => setCurrentOpenMedia(undefined)}
+        />
+      )}
     </div>
   );
 };

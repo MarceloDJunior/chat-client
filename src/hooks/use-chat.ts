@@ -45,6 +45,7 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const [text, setText] = useState<string>('');
 
   const openChatWith = useCallback((contact: Contact) => {
     setCurrentContact(contact);
@@ -127,9 +128,12 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     });
   };
 
-  const sendMessage = async (text: string): Promise<boolean> => {
+  const sendMessage = async (text: string, file?: File): Promise<boolean> => {
     try {
       if (!user || !currentContact) {
+        return false;
+      }
+      if (!text && !file) {
         return false;
       }
       const tempId = generateUniqueId();
@@ -142,9 +146,17 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
         read: false,
         pending: true,
       };
+      if (file) {
+        const fileDataURL = URL.createObjectURL(file);
+        message.fileName = file.name;
+        message.fileUrl = fileDataURL;
+      }
+      setText('');
       addNewMessage(message);
-      await mutateSendMessage(message);
+      const { fileUrl, fileName } = await mutateSendMessage({ message, file });
       message.pending = false;
+      message.fileUrl = fileUrl;
+      message.fileName = fileName;
       socket?.emit('sendMessage', JSON.stringify(message));
       if (!hasConversationWith(currentContact.id)) {
         addConversation(currentContact, message);
@@ -357,7 +369,10 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
       !isSentFromMe && isAtBottom && isTabActive;
 
     if (isSentFromMe || isSentFromContactAndIsChatActive) {
-      scrollToRecentMessage();
+      // Give some time to render the last message
+      setTimeout(() => {
+        scrollToRecentMessage();
+      }, 200);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastMessage?.id]);
@@ -427,6 +442,8 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     hasMoreMessages,
     isLoading,
     onlineUserIds,
+    text,
+    setText,
     sendMessage,
     loadMoreMessages,
     updateMessagesRead,

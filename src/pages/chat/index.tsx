@@ -1,13 +1,17 @@
-import { useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { ConversationsList } from '@/components/conversations-list';
 import { ContactInfo } from '@/components/contact-info';
+import { DragNDropZone } from '@/components/drag-n-drop-zone';
 import { Loader } from '@/components/loader';
 import { MessageList } from '@/components/message-list';
 import { ModalPageWithNavigation } from '@/components/modal-page-with-navigation';
 import { ProfileHeader } from '@/components/profile-header';
+import { SendAttachmentModal } from '@/components/send-attachment-modal';
 import { SendMessageField } from '@/components/send-message-field';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
 import { useChat } from '@/hooks/use-chat';
+import { Attachment } from '@/models/attachment';
 import styles from './styles.module.scss';
 
 export const Chat = () => {
@@ -22,14 +26,32 @@ export const Chat = () => {
     hasMoreMessages,
     isLoading,
     onlineUserIds,
+    text,
+    setText,
     sendMessage,
     loadMoreMessages,
     updateMessagesRead,
     openChatWith,
     closeChat,
   } = useChat(messagesRef);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
 
   const isMobileConversationVisible = !!currentContact;
+
+  const handleFilesSelected = useCallback(
+    (files: File[]) => {
+      const attachments: Attachment[] = files.map((file, index) => ({
+        file,
+        subtitle: index === 0 ? text : undefined,
+      }));
+      setAttachments(attachments);
+    },
+    [text],
+  );
+
+  const handleAttachmentsClose = useCallback(() => {
+    setAttachments([]);
+  }, []);
 
   const renderChatComponents = () => {
     if (!user) {
@@ -50,7 +72,21 @@ export const Chat = () => {
             <Loader height={46} width={60} />
           </div>
         ) : null}
-        <SendMessageField onSubmit={sendMessage} />
+        <AnimatePresence>
+          {attachments.length > 0 ? (
+            <SendAttachmentModal
+              attachments={attachments}
+              onClose={handleAttachmentsClose}
+              onSubmit={sendMessage}
+            />
+          ) : null}
+        </AnimatePresence>
+        <SendMessageField
+          text={text}
+          setText={setText}
+          onSubmit={sendMessage}
+          onFilesSelected={handleFilesSelected}
+        />
       </div>
     );
   };
@@ -82,12 +118,15 @@ export const Chat = () => {
             {renderChatComponents()}
           </ModalPageWithNavigation>
         ) : currentContact ? ( // render chat components in desktop if contact is selected
-          <>
+          <DragNDropZone
+            className={styles.dropzone}
+            onDropFiles={handleFilesSelected}
+          >
             <div className={styles['contact-header']}>
               <ContactInfo contact={currentContact} />
             </div>
             {renderChatComponents()}
-          </>
+          </DragNDropZone>
         ) : (
           <h3>Select a user to start chatting</h3>
         )}

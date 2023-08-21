@@ -1,10 +1,14 @@
 .container {
   width: 100%;
-  text-align: center;
 
-  .load-more-button {
-    align-self: center;
-    background-color: #4D38A2;
+  .load-more-button-container {
+    width: 100%;
+    text-align: center;
+
+    .load-more-button {
+      align-self: center;
+      background-color: #4D38A2;
+    }
   }
 
   .date {
@@ -28,15 +32,58 @@
       background-color: #1c2437;
       color: #c6c6c6;
       border-radius: 20px;
-      padding: 10px 14px;
+      padding: 12px 12px 10px;
       min-width: 100px;
       max-width: 80%;
       animation: slide-in-left 0.3s ease-in-out forwards;
 
+      a.download {
+        background-color: rgba(0, 0, 0, 0.2);
+        color: #ffffff;
+        font-weight: 600;
+        padding: 8px 16px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        font-size: 15px;
+
+        svg {
+          width: 20px;
+          height: 20px;
+          margin-left: 8px;
+        }
+      }
+
+      .img-preview {
+        margin-bottom: 6px;
+        object-fit: contain;
+        aspect-ratio: 4 / 3; /* adjust this to match your image's aspect ratio */
+        width: 100%;
+        max-width: 220px;
+        border-radius: 10px;
+        cursor: pointer
+      }
+
+      .video-preview {
+        margin-bottom: 6px;
+        cursor: pointer;
+
+        video {
+          pointer-events: none;
+          object-fit: contain;
+          aspect-ratio: 4 / 3; /* adjust this to match your image's aspect ratio */
+          width: 100%;
+          max-width: 220px;
+          border-radius: 10px;
+        }
+      }
+
       .time {
         font-size: 11px;
         font-weight: bold;
-        margin-top: 2px;
+        margin-top: 4px;
       }
     }
 

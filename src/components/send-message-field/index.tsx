@@ -1,26 +1,44 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent } from 'react';
 import SendIcon from '@/assets/icons/send.svg';
+import { ReactComponent as AttachmentIcon } from '@/assets/icons/attachment.svg';
+import { FilePicker } from '@/helpers/file-picker';
 import styles from './styles.module.scss';
 
 type SendMessageFieldProps = {
+  text: string;
+  setText: (value: string) => void;
   onSubmit: (text: string) => Promise<boolean>;
+  onFilesSelected: (files: File[]) => void;
   onFocus?: () => void;
 };
 
 export const SendMessageField = ({
+  text,
+  setText,
   onSubmit,
+  onFilesSelected,
   onFocus,
 }: SendMessageFieldProps) => {
-  const [text, setText] = useState<string>('');
-
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setText('');
     await onSubmit(text);
   };
 
+  const handleAddAttachmentClick = () => {
+    FilePicker.openFilePicker(onFilesSelected, { multiple: true });
+  };
+
   return (
     <form onSubmit={handleSubmit} className={styles.container}>
+      <button
+        type="button"
+        title="Add attachments"
+        className={styles['add-attachment']}
+        onClick={handleAddAttachmentClick}
+      >
+        <AttachmentIcon />
+      </button>
       <input
         type="text"
         name="text"
