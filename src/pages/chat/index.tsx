@@ -14,6 +14,8 @@ import { useChat } from '@/hooks/use-chat';
 import { Attachment } from '@/models/attachment';
 import styles from './styles.module.scss';
 
+const MAX_FILE_SIZE_IN_BYTES = 1024 * 1024 * 2; // 2MB
+
 export const Chat = () => {
   const { isMobile } = useBreakpoints();
   const messagesRef = useRef<HTMLDivElement>(null);
@@ -38,13 +40,47 @@ export const Chat = () => {
 
   const isMobileConversationVisible = !!currentContact;
 
+  const checkAndRemoveBigAttachments = (
+    attachments: Attachment[],
+  ): Attachment[] => {
+    if (attachments.length === 1) {
+      const attachment = attachments[0];
+      if (attachment.file.size > MAX_FILE_SIZE_IN_BYTES) {
+        alert('This file is too big. Maximum size is 2MB');
+        return [];
+      }
+      return [attachment];
+    }
+
+    const allowedAttachments = [];
+    let hasBigFiles = false;
+    for (const attachment of attachments) {
+      if (attachment.file.size > MAX_FILE_SIZE_IN_BYTES) {
+        hasBigFiles = true;
+      } else {
+        allowedAttachments.push(attachment);
+      }
+    }
+    if (hasBigFiles) {
+      if (allowedAttachments.length === 0) {
+        alert('These files are too big to be uploaded. Maximum size is 2MB');
+      } else {
+        alert(
+          'Some files are too big and have been deleted. Maximum size is 2MB',
+        );
+      }
+    }
+    return allowedAttachments;
+  };
+
   const handleFilesSelected = useCallback(
     (files: File[]) => {
       const attachments: Attachment[] = files.map((file, index) => ({
         file,
         subtitle: index === 0 ? text : undefined,
       }));
-      setAttachments(attachments);
+      const allowedAttachments = checkAndRemoveBigAttachments(attachments);
+      setAttachments(allowedAttachments);
     },
     [text],
   );
