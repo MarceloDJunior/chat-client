@@ -46,7 +46,9 @@ export const Chat = () => {
     if (attachments.length === 1) {
       const attachment = attachments[0];
       if (attachment.file.size > MAX_FILE_SIZE_IN_BYTES) {
-        alert('This file is too big. Maximum size is 2MB');
+        alert(
+          'The selected file exceeds the maximum allowed size of 2MB. Please choose a smaller file.',
+        );
         return [];
       }
       return [attachment];
@@ -63,10 +65,12 @@ export const Chat = () => {
     }
     if (hasBigFiles) {
       if (allowedAttachments.length === 0) {
-        alert('These files are too big to be uploaded. Maximum size is 2MB');
+        alert(
+          'All the selected files exceed the 2MB limit. Please select files that are each under 2MB.',
+        );
       } else {
         alert(
-          'Some files are too big and have been deleted. Maximum size is 2MB',
+          'Some files were larger than the 2MB size limit and have not been uploaded. Please make sure each individual file is smaller than 2MB.',
         );
       }
     }
