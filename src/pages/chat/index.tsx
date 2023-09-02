@@ -3,12 +3,12 @@ import { AnimatePresence } from 'framer-motion';
 import { ConversationsList } from '@/components/conversations-list';
 import { ContactInfo } from '@/components/contact-info';
 import { DragNDropZone } from '@/components/drag-n-drop-zone';
-import { Loader } from '@/components/loader';
 import { MessageList } from '@/components/message-list';
 import { ModalPageWithNavigation } from '@/components/modal-page-with-navigation';
 import { ProfileHeader } from '@/components/profile-header';
 import { SendAttachmentModal } from '@/components/send-attachment-modal';
 import { SendMessageField } from '@/components/send-message-field';
+import { MessageListSkeleton } from '@/components/skeletons/message-list';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
 import { useChat } from '@/hooks/use-chat';
 import { Attachment } from '@/models/attachment';
@@ -99,19 +99,17 @@ export const Chat = () => {
     }
     return (
       <div className={styles.chat}>
-        <div className={styles.messages} ref={messagesRef}>
-          <MessageList
-            messages={messages}
-            myUser={user}
-            hasMoreMessages={hasMoreMessages}
-            onLoadMoreClick={loadMoreMessages}
-          />
-        </div>
-        {isLoading ? (
-          <div className={styles.overlay}>
-            <Loader height={46} width={60} />
+        <div className={styles['messages-container']}>
+          <div className={styles.messages} ref={messagesRef}>
+            <MessageList
+              messages={messages}
+              myUser={user}
+              hasMoreMessages={hasMoreMessages}
+              onLoadMoreClick={loadMoreMessages}
+            />
           </div>
-        ) : null}
+          {isLoading && <MessageListSkeleton />}
+        </div>
         <AnimatePresence>
           {attachments.length > 0 ? (
             <SendAttachmentModal
