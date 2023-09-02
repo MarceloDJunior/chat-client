@@ -51,7 +51,7 @@ export const MessageList = ({
   const renderMessageMedia = (message: Message) => {
     if (message.fileName && message.fileUrl) {
       const animationId = String(message.id);
-      const openVideo = () =>
+      const openMedia = () =>
         setCurrentOpenMedia({
           fileName: message.fileName ?? '',
           fileUrl: message.fileUrl ?? '',
@@ -65,7 +65,7 @@ export const MessageList = ({
               layoutId={animationId}
               src={message.fileUrl}
               className={styles['img-preview']}
-              onClick={openVideo}
+              onClick={openMedia}
             />
           );
         case FileType.VIDEO:
@@ -73,10 +73,10 @@ export const MessageList = ({
             <motion.div
               layoutId={animationId}
               role="button"
-              onClick={openVideo}
+              onClick={openMedia}
               className={styles['video-preview']}
             >
-              <video src={message.fileUrl} onClick={openVideo} controls />
+              <video src={message.fileUrl} onClick={openMedia} controls />
             </motion.div>
           );
         default:
