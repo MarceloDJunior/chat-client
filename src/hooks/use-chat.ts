@@ -20,7 +20,9 @@ import { useTabActive } from './use-tab-active';
 
 let lastMessageId: number;
 const receivedMessageSound = new Audio(ReceivedMessageSound);
+receivedMessageSound.muted = true;
 const sentMessageSound = new Audio(SentMessageSound);
+sentMessageSound.muted = true;
 
 const generateUniqueId = () =>
   new Date().getTime() + Math.floor(Math.random() * 1000);
@@ -282,8 +284,14 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     window.addEventListener(
       'click',
       () => {
-        receivedMessageSound.play().then(() => receivedMessageSound.pause());
-        sentMessageSound.play().then(() => sentMessageSound.pause());
+        receivedMessageSound.play().then(() => {
+          receivedMessageSound.pause();
+          receivedMessageSound.muted = false;
+        });
+        sentMessageSound.play().then(() => {
+          sentMessageSound.pause();
+          sentMessageSound.muted = false;
+        });
       },
       { once: true },
     ); // The listener is removed after one execution
