@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useEffect, useMemo, useState } from 'react';
+import { RefObject, useEffect, useMemo, useState } from 'react';
 import { LAST_CONTACT_ID } from '@/constants/cookies';
 import { useWebSocketContext } from '@/context/websocket-context';
 import { CookiesHelper } from '@/helpers/cookies';
@@ -38,7 +38,7 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
   const { isTabActive } = useTabActive();
 
   const [currentContact, setCurrentContact] = useState<Contact>();
-  const [conversations, setConversations] = useState<Conversation[]>();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [onlineUserIds, setOnlineUserIds] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,11 +47,11 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [text, setText] = useState<string>('');
 
-  const openChatWith = useCallback((contact: Contact) => {
+  const openChatWith = (contact: Contact) => {
     setCurrentContact(contact);
     resetContactNewMessages(contact.id);
     NotificationHelper.requestPermission();
-  }, []);
+  };
 
   const closeChat = () => {
     setCurrentContact(undefined);
@@ -59,7 +59,8 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
 
   const resetContactNewMessages = (contactId: number) => {
     setConversations((prevConversations) => {
-      return prevConversations?.map((conversation) => {
+      const newConversations = [...(prevConversations ?? [])];
+      return newConversations.map((conversation) => {
         if (conversation.contact.id === contactId) {
           return { ...conversation, newMessages: 0 } as Conversation;
         }
@@ -68,13 +69,13 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     });
   };
 
-  const addNewMessage = useCallback((message: Message) => {
+  const addNewMessage = (message: Message) => {
     setMessages((prevMessages) => {
       const newMessages = [...prevMessages];
       newMessages.unshift(message);
       return newMessages;
     });
-  }, []);
+  };
 
   const updateMessage = (message: Message) => {
     setMessages((prevMessages) =>
@@ -87,37 +88,33 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     );
   };
 
-  const addConversation = useCallback(
-    (contact: Contact, message: Message) => {
-      setConversations((prevConversations) => {
-        const conversations = [...(prevConversations ?? [])];
-        conversations.unshift({
-          contact,
-          lastMessage: message,
-          newMessages: 0,
-        });
+  const addConversation = (contact: Contact, message: Message) => {
+    setConversations((prevConversations) => {
+      const newConversations = [...prevConversations];
 
-        return conversations;
+      newConversations.unshift({
+        contact,
+        lastMessage: message,
+        newMessages: 0,
       });
-      if (contact.id === currentContact?.id) {
-        addNewMessage(message);
-      }
-    },
-    [addNewMessage, currentContact?.id],
-  );
 
-  const hasConversationWith = useCallback(
-    (contactId: number): boolean => {
-      return !!conversations?.find(
-        (conversation) => conversation.contact.id === contactId,
-      );
-    },
-    [conversations],
-  );
+      return newConversations;
+    });
+    if (contact.id === currentContact?.id && lastMessageId !== message.id) {
+      addNewMessage(message);
+    }
+  };
+
+  const hasConversationWith = (contactId: number): boolean => {
+    return !!conversations.find(
+      (conversation) => conversation.contact.id === contactId,
+    );
+  };
 
   const updateConversationLastMessage = (message: Message) => {
     setConversations((prevConversations) => {
-      return prevConversations?.map((conversation) => {
+      const newConversations = [...prevConversations];
+      return newConversations.map((conversation) => {
         if (
           [message.from.id, message.to.id].includes(conversation.contact.id)
         ) {
@@ -174,7 +171,8 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
 
   const incrementContactNewMessages = (contactId: number) => {
     setConversations((prevConversations) => {
-      return prevConversations?.map((conversation) => {
+      const newConversations = [...prevConversations];
+      return newConversations.map((conversation) => {
         if (conversation.contact.id === contactId) {
           return {
             ...conversation,
@@ -186,47 +184,37 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     });
   };
 
-  const handleNewMessage = useCallback(
-    (message: Message) => {
-      if (!message.id || lastMessageId === message.id) {
-        return;
-      }
-      lastMessageId = message.id;
-      if (!hasConversationWith(message.from.id)) {
-        addConversation(message.from, message);
-      } else {
-        if (currentContact?.id === message.from.id) {
-          addNewMessage(message);
-          if (!isTabActive) {
-            incrementContactNewMessages(message.from.id);
-          }
-        } else {
+  const handleNewMessage = (message: Message) => {
+    if (!message.id || lastMessageId === message.id) {
+      return;
+    }
+    lastMessageId = message.id;
+    if (!hasConversationWith(message.from.id)) {
+      addConversation(message.from, message);
+    } else {
+      if (currentContact?.id === message.from.id) {
+        addNewMessage(message);
+        if (!isTabActive) {
           incrementContactNewMessages(message.from.id);
         }
-
-        if (!isTabActive) {
-          NotificationHelper.showNotification({
-            title: `New message from ${message.from.name}`,
-            message: message.text,
-            icon: message.from.picture,
-            onClick: () => openChatWith(message.from),
-          });
-        }
-
-        updateConversationLastMessage(message);
+      } else {
+        incrementContactNewMessages(message.from.id);
       }
-    },
-    [
-      addConversation,
-      addNewMessage,
-      currentContact?.id,
-      hasConversationWith,
-      isTabActive,
-      openChatWith,
-    ],
-  );
 
-  const loadMoreMessages = useCallback(async () => {
+      if (!isTabActive) {
+        NotificationHelper.showNotification({
+          title: `New message from ${message.from.name}`,
+          message: message.text,
+          icon: message.from.picture,
+          onClick: () => openChatWith(message.from),
+        });
+      }
+
+      updateConversationLastMessage(message);
+    }
+  };
+
+  const loadMoreMessages = async () => {
     const { data, meta } = await mutateGetMessages({
       contactId: currentContact?.id ?? 0,
       page: currentPage + 1,
@@ -234,7 +222,7 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     setMessages((prevData) => prevData.concat(data));
     setHasMoreMessages(meta.hasNextPage);
     setCurrentPage((prevValue) => prevValue + 1);
-  }, [currentContact?.id, mutateGetMessages, currentPage]);
+  };
 
   const scrollToRecentMessage = () => {
     const ref = messagesRef.current;
@@ -251,13 +239,13 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     [currentContact?.id, messages],
   );
 
-  const setMessagesRead = useCallback(() => {
+  const setMessagesRead = () => {
     setMessages((prevMessages) =>
       prevMessages.map((message) => ({ ...message, read: true })),
     );
-  }, []);
+  };
 
-  const updateMessagesRead = useCallback(async () => {
+  const updateMessagesRead = async () => {
     try {
       if (currentContact && isAtBottom && hasUnreadMessages) {
         await mutateUpdateRead(currentContact.id);
@@ -268,14 +256,7 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     } catch (err) {
       console.error(err);
     }
-  }, [
-    currentContact,
-    isAtBottom,
-    hasUnreadMessages,
-    mutateUpdateRead,
-    setMessagesRead,
-    socket,
-  ]);
+  };
 
   const lastMessage = useMemo(() => {
     if (!(messages.length > 0)) {
@@ -286,8 +267,8 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
   }, [messages]);
 
   useEffect(() => {
-    if (conversationsFromServer) {
-      setConversations(conversationsFromServer);
+    if (conversationsFromServer?.length) {
+      setConversations([...conversationsFromServer]);
     }
   }, [conversationsFromServer]);
 
@@ -359,7 +340,7 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
       socket?.off('connectedUsers');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentContact?.id, socket]);
+  }, [currentContact?.id, socket, handleNewMessage]);
 
   useEffect(() => {
     if (!lastMessage?.id) return;
