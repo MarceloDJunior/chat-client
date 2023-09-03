@@ -27,7 +27,7 @@ export const Chat = () => {
     messages,
     hasMoreMessages,
     isLoading,
-    onlineUserIds,
+    onlineUsers,
     text,
     setText,
     sendMessage,
@@ -138,9 +138,9 @@ export const Chat = () => {
       <div className={styles.sidebar}>
         <ProfileHeader user={user} />
         <ConversationsList
-          contacts={contacts ?? []}
           conversations={conversations ?? []}
-          onlineUserIds={onlineUserIds}
+          allUsers={contacts ?? []}
+          onlineUsers={onlineUsers}
           onContactClick={openChatWith}
         />
       </div>
@@ -166,7 +166,7 @@ export const Chat = () => {
             {renderChatComponents()}
           </DragNDropZone>
         ) : (
-          <h3>Select a user to start chatting</h3>
+          <h3>Select a user to start a conversation</h3>
         )}
       </main>
     </div>

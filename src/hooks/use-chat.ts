@@ -40,7 +40,7 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
   const [currentContact, setCurrentContact] = useState<Contact>();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [onlineUserIds, setOnlineUserIds] = useState<number[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -88,19 +88,24 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     );
   };
 
-  const addConversation = (contact: Contact, message: Message) => {
+  const addConversation = (
+    contact: Contact,
+    message: Message,
+    received?: boolean,
+  ) => {
+    const isCurrentContact = contact.id === currentContact?.id;
     setConversations((prevConversations) => {
       const newConversations = [...prevConversations];
 
       newConversations.unshift({
         contact,
         lastMessage: message,
-        newMessages: 0,
+        newMessages: received && !isCurrentContact ? 1 : 0,
       });
 
       return newConversations;
     });
-    if (contact.id === currentContact?.id && lastMessageId !== message.id) {
+    if (isCurrentContact && received) {
       addNewMessage(message);
     }
   };
@@ -190,7 +195,7 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     }
     lastMessageId = message.id;
     if (!hasConversationWith(message.from.id)) {
-      addConversation(message.from, message);
+      addConversation(message.from, message, true);
     } else {
       if (currentContact?.id === message.from.id) {
         addNewMessage(message);
@@ -319,10 +324,14 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
       });
 
       socket.on('connectedUsers', (payload: string) => {
-        const onlineUserIds = JSON.parse(payload) as number[];
-        setOnlineUserIds(onlineUserIds);
+        const onlineUsers = JSON.parse(payload) as Contact[];
+        const usersWithoutMine = onlineUsers.filter(
+          (contact) => contact.id !== user?.id,
+        );
+        setOnlineUsers(usersWithoutMine);
         const isCurrentContactOnline = !!(
-          currentContact?.id && onlineUserIds.includes(currentContact.id)
+          currentContact?.id &&
+          onlineUsers.find((user) => user.id === currentContact.id)
         );
         setCurrentContact((prevContact) => {
           if (prevContact) {
@@ -422,7 +431,7 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     messages,
     hasMoreMessages,
     isLoading,
-    onlineUserIds,
+    onlineUsers,
     text,
     setText,
     sendMessage,

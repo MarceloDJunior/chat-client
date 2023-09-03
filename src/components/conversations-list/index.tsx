@@ -12,19 +12,20 @@ import { MessageStatus } from '../message-status';
 
 type ConversationsListProps = {
   conversations: Conversation[];
-  contacts: Contact[];
-  onlineUserIds: number[];
+  allUsers: Contact[];
+  onlineUsers: Contact[];
   onContactClick: (contact: Contact) => void;
 };
 
 export const ConversationsList = ({
   conversations,
-  contacts,
-  onlineUserIds,
+  allUsers,
+  onlineUsers,
   onContactClick,
 }: ConversationsListProps) => {
   const { data: user } = useGetUser();
   const [animationParent] = useAutoAnimate();
+
   const orderedStatusConversations = useMemo(() => {
     if (!conversations) {
       return [];
@@ -35,7 +36,9 @@ export const ConversationsList = ({
         ...conversation,
         contact: {
           ...conversation.contact,
-          status: onlineUserIds.includes(conversation.contact.id)
+          status: onlineUsers.find(
+            (user) => user.id === conversation.contact.id,
+          )
             ? 'online'
             : 'offline',
         } as Contact,
@@ -50,13 +53,13 @@ export const ConversationsList = ({
     );
 
     return orderedConversations;
-  }, [conversations, onlineUserIds]);
+  }, [conversations, onlineUsers]);
 
-  const contactsWithoutConversations = useMemo(() => {
-    const contactsWithoutConversations = contacts.filter(
-      (contact) =>
+  const onlineUsersWithoutConversations = useMemo(() => {
+    const contactsWithoutConversations = onlineUsers.filter(
+      (user) =>
         !conversations.find(
-          (conversation) => conversation.contact.id === contact.id,
+          (conversation) => conversation.contact.id === user.id,
         ),
     );
 
@@ -64,12 +67,25 @@ export const ConversationsList = ({
       (contact) =>
         ({
           ...contact,
-          status: onlineUserIds.includes(contact.id) ? 'online' : 'offline',
+          status: 'online',
         } as Contact),
     );
 
     return contactsWithStatus;
-  }, [contacts, conversations, onlineUserIds]);
+  }, [conversations, onlineUsers]);
+
+  const offlineUsersWithoutConversations = useMemo(() => {
+    const contactsOffline = allUsers.filter(
+      (user) =>
+        !onlineUsersWithoutConversations.some(
+          (onlineUser) => onlineUser.id === user.id,
+        ) &&
+        !conversations.some(
+          (conversation) => conversation.contact.id === user.id,
+        ),
+    );
+    return contactsOffline;
+  }, [allUsers, conversations, onlineUsersWithoutConversations]);
 
   const renderContact = ({
     contact,
@@ -153,10 +169,18 @@ export const ConversationsList = ({
             )}
           </>
         )}
-        {contactsWithoutConversations.length > 0 && (
+        {onlineUsersWithoutConversations.length > 0 && (
           <>
-            <h4>Contacts</h4>
-            {contactsWithoutConversations.map((contact) =>
+            <h4>Online users</h4>
+            {onlineUsersWithoutConversations.map((contact) =>
+              renderContact({ contact }),
+            )}
+          </>
+        )}
+        {offlineUsersWithoutConversations.length > 0 && (
+          <>
+            <h4>Offline users</h4>
+            {offlineUsersWithoutConversations.map((contact) =>
               renderContact({ contact }),
             )}
           </>
