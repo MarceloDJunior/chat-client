@@ -1,4 +1,6 @@
 import { RefObject, useEffect, useMemo, useState } from 'react';
+import ReceivedMessageSound from '@/assets/sounds/received-message.mp3';
+import SentMessageSound from '@/assets/sounds/sent-message.mp3';
 import { LAST_CONTACT_ID } from '@/constants/cookies';
 import { useWebSocketContext } from '@/context/websocket-context';
 import { CookiesHelper } from '@/helpers/cookies';
@@ -17,6 +19,8 @@ import { useGetUser } from '@/queries/user';
 import { useTabActive } from './use-tab-active';
 
 let lastMessageId: number;
+const receivedMessageSound = new Audio(ReceivedMessageSound);
+const sentMessageSound = new Audio(SentMessageSound);
 
 const generateUniqueId = () =>
   new Date().getTime() + Math.floor(Math.random() * 1000);
@@ -155,6 +159,7 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
       }
       setText('');
       addNewMessage(message);
+      sentMessageSound.play();
       const { fileUrl, fileName } = await mutateSendMessage({ message, file });
       message.pending = false;
       message.fileUrl = fileUrl;
@@ -193,6 +198,7 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     if (!message.id || lastMessageId === message.id) {
       return;
     }
+    receivedMessageSound.play();
     lastMessageId = message.id;
     if (!hasConversationWith(message.from.id)) {
       addConversation(message.from, message, true);
@@ -270,6 +276,18 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     const lastMessage = messages[0];
     return lastMessage;
   }, [messages]);
+
+  useEffect(() => {
+    // Unlock audio on the first user interaction
+    window.addEventListener(
+      'click',
+      () => {
+        receivedMessageSound.play().then(() => receivedMessageSound.pause());
+        sentMessageSound.play().then(() => sentMessageSound.pause());
+      },
+      { once: true },
+    ); // The listener is removed after one execution
+  }, []);
 
   useEffect(() => {
     if (conversationsFromServer?.length) {
