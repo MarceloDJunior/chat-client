@@ -14,7 +14,7 @@ import { useChat } from '@/hooks/use-chat';
 import { Attachment } from '@/models/attachment';
 import styles from './styles.module.scss';
 
-const MAX_FILE_SIZE_IN_BYTES = 1024 * 1024 * 20; // 20MB
+const MAX_FILE_SIZE_IN_BYTES = 1024 * 1024 * 1; // 1MB
 
 export const Chat = () => {
   const { isMobile } = useBreakpoints();
@@ -47,7 +47,7 @@ export const Chat = () => {
       const attachment = attachments[0];
       if (attachment.file.size > MAX_FILE_SIZE_IN_BYTES) {
         alert(
-          'The selected file exceeds the maximum allowed size of 20MB. Please choose a smaller file.',
+          'The selected file exceeds the maximum allowed size of 1MB. Please choose a smaller file.',
         );
         return [];
       }
