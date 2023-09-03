@@ -164,6 +164,7 @@ export const SendAttachmentModal = ({
                     )
                   }
                   value={attachment.subtitle}
+                  autoComplete="off"
                   placeholder="Write message..."
                 />
                 <button type="submit" title="Send">

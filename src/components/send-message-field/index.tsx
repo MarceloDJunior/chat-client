@@ -45,6 +45,7 @@ export const SendMessageField = ({
         onChange={(event) => setText(event.target.value)}
         value={text}
         onFocus={onFocus}
+        autoComplete="off"
         placeholder="Write message..."
       />
       <button type="submit" title="Send Message" disabled={!text}>
