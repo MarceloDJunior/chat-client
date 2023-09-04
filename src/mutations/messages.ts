@@ -8,11 +8,6 @@ type GetMessagesParams = {
   page: number;
 };
 
-type SendMessageParams = {
-  message: Message;
-  file?: File;
-};
-
 const getMessages = async ({
   contactId,
   page,
@@ -29,21 +24,19 @@ const getMessages = async ({
 export const useGetMessagesMutation = () =>
   useMutation('getMessages', getMessages);
 
-const sendMessage = async ({
-  message,
-  file,
-}: SendMessageParams): Promise<Message> => {
-  const formData = new FormData();
-  const dateString = new Date(message.dateTime).toUTCString();
-  formData.append('toId', String(message.to.id));
-  formData.append('text', String(message.text));
-  formData.append('dateTime', dateString);
-  if (file) {
-    formData.append('file', file);
+const getPresignedUrl = async (filename: string): Promise<string> => {
+  const response = await api.get(`/conversations/presigned-url/${filename}`);
+  if (response.status !== 200) {
+    throw new Error('An error occurred while getting the URL');
   }
-  const response = await api.post('/conversations/send-message', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  return response.data;
+};
+
+export const useGetPresignedUrl = () =>
+  useMutation('getPresignedUrl', getPresignedUrl);
+
+const sendMessage = async (message: Message): Promise<Message> => {
+  const response = await api.post('/conversations/send-message', message);
   if (response.status !== 201) {
     throw new Error('An error occurred while sending message');
   }

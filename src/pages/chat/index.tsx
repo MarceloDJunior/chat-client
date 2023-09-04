@@ -9,12 +9,13 @@ import { ProfileHeader } from '@/components/profile-header';
 import { SendAttachmentModal } from '@/components/send-attachment-modal';
 import { SendMessageField } from '@/components/send-message-field';
 import { MessageListSkeleton } from '@/components/skeletons/message-list';
+import { FileHelper } from '@/helpers/file';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
 import { useChat } from '@/hooks/use-chat';
 import { Attachment } from '@/models/attachment';
 import styles from './styles.module.scss';
 
-const MAX_FILE_SIZE_IN_BYTES = 1024 * 1024 * 1; // 1MB
+const MAX_FILE_SIZE_IN_BYTES = 1024 * 1024 * 50; // 50MB
 
 export const Chat = () => {
   const { isMobile } = useBreakpoints();
@@ -43,11 +44,12 @@ export const Chat = () => {
   const checkAndRemoveBigAttachments = (
     attachments: Attachment[],
   ): Attachment[] => {
+    const maxSizeInMB = FileHelper.bytesToMegabytes(MAX_FILE_SIZE_IN_BYTES);
     if (attachments.length === 1) {
       const attachment = attachments[0];
       if (attachment.file.size > MAX_FILE_SIZE_IN_BYTES) {
         alert(
-          'The selected file exceeds the maximum allowed size of 1MB. Please choose a smaller file.',
+          `The selected file exceeds the maximum allowed size of ${maxSizeInMB}MB. Please choose a smaller file.`,
         );
         return [];
       }
@@ -66,11 +68,11 @@ export const Chat = () => {
     if (hasBigFiles) {
       if (allowedAttachments.length === 0) {
         alert(
-          'All the selected files exceed the 2MB limit. Please select files that are each under 2MB.',
+          `All the selected files exceed the ${maxSizeInMB}MB limit. Please select files that are each under 2MB.`,
         );
       } else {
         alert(
-          'Some files were larger than the 2MB size limit and have not been uploaded. Please make sure each individual file is smaller than 2MB.',
+          `Some files were larger than the ${maxSizeInMB}MB size limit and have not been uploaded. Please make sure each individual file is smaller than ${maxSizeInMB}MB.`,
         );
       }
     }

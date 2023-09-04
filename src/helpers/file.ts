@@ -17,7 +17,11 @@ export class FileHelper {
   }
 
   public static bytesToKilobytes(size: number): number {
-    return Math.floor(size / 1000);
+    return Math.floor(size / 1024);
+  }
+
+  public static bytesToMegabytes(size: number): number {
+    return Math.floor(size / (1024 * 1024));
   }
 
   public static async dataURLtoFile(

@@ -10,6 +10,7 @@ import { Conversation } from '@/models/conversation';
 import { Message } from '@/models/message';
 import {
   useGetMessagesMutation,
+  useGetPresignedUrl,
   useSendMessageMutation,
   useUpdateReadMutation,
 } from '@/mutations/messages';
@@ -17,6 +18,7 @@ import { useGetContactsQuery } from '@/queries/contacts';
 import { useGetConversationsQuery } from '@/queries/conversations';
 import { useGetUser } from '@/queries/user';
 import { useTabActive } from './use-tab-active';
+import { S3Helper } from '@/helpers/s3';
 
 let lastMessageId: number;
 const receivedMessageSound = new Audio(ReceivedMessageSound);
@@ -40,6 +42,7 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
   const { mutateAsync: mutateGetMessages } = useGetMessagesMutation();
   const { mutateAsync: mutateSendMessage } = useSendMessageMutation();
   const { mutateAsync: mutateUpdateRead } = useUpdateReadMutation();
+  const { mutateAsync: mutateGetPresignedUrl } = useGetPresignedUrl();
   const { socket, connect: connectWebSocket } = useWebSocketContext();
   const { isTabActive } = useTabActive();
 
@@ -154,18 +157,22 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
         read: false,
         pending: true,
       };
+      setText('');
       if (file) {
         const fileDataURL = URL.createObjectURL(file);
         message.fileName = file.name;
         message.fileUrl = fileDataURL;
+        addNewMessage(message);
+
+        const fileUrl = await mutateGetPresignedUrl(file.name);
+        await S3Helper.uploadFile(file, fileUrl);
+        message.fileUrl = S3Helper.getFileUrlFromPresignedUrl(fileUrl);
+      } else {
+        addNewMessage(message);
       }
-      setText('');
-      addNewMessage(message);
       sentMessageSound.play();
-      const { fileUrl, fileName } = await mutateSendMessage({ message, file });
+      await mutateSendMessage(message);
       message.pending = false;
-      message.fileUrl = fileUrl;
-      message.fileName = fileName;
       socket?.emit('sendMessage', JSON.stringify(message));
       if (!hasConversationWith(currentContact.id)) {
         addConversation(currentContact, message);
