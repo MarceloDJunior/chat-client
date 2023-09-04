@@ -35,7 +35,7 @@ export const MediaViewer = ({
         );
       default:
         return (
-          <a href={fileUrl} download title="Download">
+          <a href={fileUrl} download={fileName} title="Download">
             {fileName}
           </a>
         );
@@ -51,7 +51,7 @@ export const MediaViewer = ({
     >
       <div className={styles.container}>
         <div className={styles.toolbar}>
-          <a href={fileUrl} download>
+          <a href={fileUrl} download={fileName}>
             <button
               type="button"
               className={styles['download-button']}
