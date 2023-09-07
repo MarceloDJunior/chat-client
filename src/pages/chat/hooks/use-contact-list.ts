@@ -159,7 +159,6 @@ export const useContactList = ({
     if (socket) {
       socket.on('connectedUsers', (payload: string) => {
         const onlineUsers = JSON.parse(payload) as Contact[];
-        console.log(onlineUsers);
         const usersWithoutMine = onlineUsers.filter(
           (contact) => contact.id !== user?.id,
         );
