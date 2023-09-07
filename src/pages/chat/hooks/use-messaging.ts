@@ -74,29 +74,37 @@ export const useMessaging = ({
     );
   };
 
+  const createPendingMessage = (text: string, file?: File) => {
+    if (!user || !currentContact) {
+      return null;
+    }
+    if (!text && !file) {
+      return null;
+    }
+    const tempId = generateUniqueId();
+    const message: Message = {
+      id: tempId,
+      from: user,
+      to: currentContact,
+      dateTime: new Date(),
+      text,
+      read: false,
+      pending: true,
+    };
+    return message;
+  };
+
   const sendMessage = async (text: string, file?: File): Promise<boolean> => {
     try {
-      if (!user || !currentContact) {
+      const message = createPendingMessage(text, file);
+      if (!message) {
         return false;
       }
-      if (!text && !file) {
-        return false;
-      }
-      const tempId = generateUniqueId();
-      const message: Message = {
-        id: tempId,
-        from: user,
-        to: currentContact,
-        dateTime: new Date(),
-        text,
-        read: false,
-        pending: true,
-      };
       setText('');
       if (file) {
-        const fileDataURL = URL.createObjectURL(file);
+        const tempFileURL = URL.createObjectURL(file);
         message.fileName = file.name;
-        message.fileUrl = fileDataURL;
+        message.fileUrl = tempFileURL;
         addNewMessage(message);
 
         const fileUrl = await mutateGetPresignedUrl(file.name);
