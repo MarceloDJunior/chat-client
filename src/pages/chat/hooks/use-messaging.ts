@@ -4,9 +4,7 @@ import SentMessageSound from '@/assets/sounds/sent-message.mp3';
 import { LAST_CONTACT_ID } from '@/constants/cookies';
 import { useWebSocketContext } from '@/context/websocket-context';
 import { CookiesHelper } from '@/helpers/cookies';
-import { NotificationHelper } from '@/helpers/notification';
 import { Contact } from '@/models/contact';
-import { Conversation } from '@/models/conversation';
 import { Message } from '@/models/message';
 import {
   useGetMessagesMutation,
@@ -14,11 +12,9 @@ import {
   useSendMessageMutation,
   useUpdateReadMutation,
 } from '@/mutations/messages';
-import { useGetContactsQuery } from '@/queries/contacts';
-import { useGetConversationsQuery } from '@/queries/conversations';
-import { useGetUser } from '@/queries/user';
-import { useTabActive } from './use-tab-active';
 import { S3Helper } from '@/helpers/s3';
+import { useTabActive } from '@/hooks/use-tab-active';
+import { useGetUser } from '@/queries/user';
 
 let lastMessageId: number;
 const receivedMessageSound = new Audio(ReceivedMessageSound);
@@ -29,54 +25,35 @@ sentMessageSound.muted = true;
 const generateUniqueId = () =>
   new Date().getTime() + Math.floor(Math.random() * 1000);
 
-const initialContactId = CookiesHelper.get(LAST_CONTACT_ID);
-
-const updatePageTitle = (newTitle: string) => {
-  document.title = newTitle;
+type Props = {
+  currentContact: Contact | undefined;
+  messagesRef: RefObject<HTMLDivElement>;
+  onMessageSent?: (message: Message) => void;
+  onMessageReceived?: (message: Message) => void;
+  onMessagesRead?: (contactId: number) => void;
 };
 
-export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
+export const useMessaging = ({
+  currentContact,
+  messagesRef,
+  onMessageSent,
+  onMessageReceived,
+  onMessagesRead,
+}: Props) => {
   const { data: user } = useGetUser();
-  const { data: conversationsFromServer } = useGetConversationsQuery();
-  const { data: contacts } = useGetContactsQuery();
   const { mutateAsync: mutateGetMessages } = useGetMessagesMutation();
   const { mutateAsync: mutateSendMessage } = useSendMessageMutation();
   const { mutateAsync: mutateUpdateRead } = useUpdateReadMutation();
   const { mutateAsync: mutateGetPresignedUrl } = useGetPresignedUrl();
-  const { socket, connect: connectWebSocket } = useWebSocketContext();
+  const { socket } = useWebSocketContext();
   const { isTabActive } = useTabActive();
 
-  const [currentContact, setCurrentContact] = useState<Contact>();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [onlineUsers, setOnlineUsers] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [text, setText] = useState<string>('');
-
-  const openChatWith = (contact: Contact) => {
-    setCurrentContact(contact);
-    resetContactNewMessages(contact.id);
-    NotificationHelper.requestPermission();
-  };
-
-  const closeChat = () => {
-    setCurrentContact(undefined);
-  };
-
-  const resetContactNewMessages = (contactId: number) => {
-    setConversations((prevConversations) => {
-      const newConversations = [...(prevConversations ?? [])];
-      return newConversations.map((conversation) => {
-        if (conversation.contact.id === contactId) {
-          return { ...conversation, newMessages: 0 } as Conversation;
-        }
-        return conversation;
-      });
-    });
-  };
 
   const addNewMessage = (message: Message) => {
     setMessages((prevMessages) => {
@@ -95,48 +72,6 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
         return currMessage;
       }),
     );
-  };
-
-  const addConversation = (
-    contact: Contact,
-    message: Message,
-    received?: boolean,
-  ) => {
-    const isCurrentContact = contact.id === currentContact?.id;
-    setConversations((prevConversations) => {
-      const newConversations = [...prevConversations];
-
-      newConversations.unshift({
-        contact,
-        lastMessage: message,
-        newMessages: received && !isCurrentContact ? 1 : 0,
-      });
-
-      return newConversations;
-    });
-    if (isCurrentContact && received) {
-      addNewMessage(message);
-    }
-  };
-
-  const hasConversationWith = (contactId: number): boolean => {
-    return !!conversations.find(
-      (conversation) => conversation.contact.id === contactId,
-    );
-  };
-
-  const updateConversationLastMessage = (message: Message) => {
-    setConversations((prevConversations) => {
-      const newConversations = [...prevConversations];
-      return newConversations.map((conversation) => {
-        if (
-          [message.from.id, message.to.id].includes(conversation.contact.id)
-        ) {
-          return { ...conversation, lastMessage: message } as Conversation;
-        }
-        return conversation;
-      });
-    });
   };
 
   const sendMessage = async (text: string, file?: File): Promise<boolean> => {
@@ -174,33 +109,13 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
       await mutateSendMessage(message);
       message.pending = false;
       socket?.emit('sendMessage', JSON.stringify(message));
-      if (!hasConversationWith(currentContact.id)) {
-        addConversation(currentContact, message);
-      } else {
-        updateMessage(message);
-        updateConversationLastMessage(message);
-      }
-
+      updateMessage(message);
+      onMessageSent?.(message);
       return true;
     } catch (err) {
       console.error(err);
       return false;
     }
-  };
-
-  const incrementContactNewMessages = (contactId: number) => {
-    setConversations((prevConversations) => {
-      const newConversations = [...prevConversations];
-      return newConversations.map((conversation) => {
-        if (conversation.contact.id === contactId) {
-          return {
-            ...conversation,
-            newMessages: (conversation.newMessages ?? 0) + 1,
-          } as Conversation;
-        }
-        return conversation;
-      });
-    });
   };
 
   const handleNewMessage = (message: Message) => {
@@ -209,29 +124,10 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     }
     receivedMessageSound.play();
     lastMessageId = message.id;
-    if (!hasConversationWith(message.from.id)) {
-      addConversation(message.from, message, true);
-    } else {
-      if (currentContact?.id === message.from.id) {
-        addNewMessage(message);
-        if (!isTabActive) {
-          incrementContactNewMessages(message.from.id);
-        }
-      } else {
-        incrementContactNewMessages(message.from.id);
-      }
-
-      if (!isTabActive) {
-        NotificationHelper.showNotification({
-          title: `New message from ${message.from.name}`,
-          message: message.text,
-          icon: message.from.picture,
-          onClick: () => openChatWith(message.from),
-        });
-      }
-
-      updateConversationLastMessage(message);
+    if (currentContact?.id === message.from.id) {
+      addNewMessage(message);
     }
+    onMessageReceived?.(message);
   };
 
   const loadMoreMessages = async () => {
@@ -263,13 +159,15 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     setMessages((prevMessages) =>
       prevMessages.map((message) => ({ ...message, read: true })),
     );
+    if (onMessagesRead && currentContact) {
+      onMessagesRead?.(currentContact.id);
+    }
   };
 
   const updateMessagesRead = async () => {
     try {
       if (currentContact && isAtBottom && hasUnreadMessages) {
         await mutateUpdateRead(currentContact.id);
-        resetContactNewMessages(currentContact.id);
         setMessagesRead();
         socket?.emit('messagesRead', currentContact.id);
       }
@@ -305,12 +203,6 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
   }, []);
 
   useEffect(() => {
-    if (conversationsFromServer?.length) {
-      setConversations([...conversationsFromServer]);
-    }
-  }, [conversationsFromServer]);
-
-  useEffect(() => {
     const resetChat = () => {
       setIsAtBottom(true);
       setIsLoading(true);
@@ -342,10 +234,6 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
   }, [currentContact?.id]);
 
   useEffect(() => {
-    connectWebSocket();
-  }, [connectWebSocket]);
-
-  useEffect(() => {
     if (socket) {
       socket.on('messageReceived', (payload: string) => {
         const message: Message = JSON.parse(payload);
@@ -355,31 +243,10 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
       socket.on('messagesRead', () => {
         setMessagesRead();
       });
-
-      socket.on('connectedUsers', (payload: string) => {
-        const onlineUsers = JSON.parse(payload) as Contact[];
-        const usersWithoutMine = onlineUsers.filter(
-          (contact) => contact.id !== user?.id,
-        );
-        setOnlineUsers(usersWithoutMine);
-        const isCurrentContactOnline = !!(
-          currentContact?.id &&
-          onlineUsers.find((user) => user.id === currentContact.id)
-        );
-        setCurrentContact((prevContact) => {
-          if (prevContact) {
-            return {
-              ...prevContact,
-              status: isCurrentContactOnline ? 'online' : 'offline',
-            };
-          }
-        });
-      });
     }
     return () => {
       socket?.off('messageReceived');
       socket?.off('messagesRead');
-      socket?.off('connectedUsers');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentContact?.id, socket, handleNewMessage]);
@@ -399,41 +266,6 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastMessage?.id]);
-
-  useEffect(() => {
-    const setInitialConversation = () => {
-      if (!!conversations?.length && initialContactId) {
-        const initialConversation = conversations.find(
-          (conversation) =>
-            conversation.contact.id === Number(initialContactId),
-        );
-        if (initialConversation) {
-          setCurrentContact(
-            (prevValue) => prevValue ?? initialConversation.contact,
-          );
-        }
-      }
-    };
-
-    const updatePageTitleOnNewMessages = () => {
-      if (!conversations?.length) {
-        return;
-      }
-
-      const totalNewMessages: number = conversations.reduce(
-        (acc, currConversation) => {
-          return acc + (currConversation.newMessages ?? 0);
-        },
-        0,
-      );
-
-      const newTitle = totalNewMessages ? `Chat (${totalNewMessages})` : 'Chat';
-      updatePageTitle(newTitle);
-    };
-
-    setInitialConversation();
-    updatePageTitleOnNewMessages();
-  }, [conversations]);
 
   useEffect(() => {
     const addListenerToCheckIfIsAtTheEndOfChat = () => {
@@ -457,20 +289,14 @@ export const useChat = (messagesRef: RefObject<HTMLDivElement>) => {
   }, []);
 
   return {
-    user,
-    conversations,
-    contacts,
     currentContact,
     messages,
     hasMoreMessages,
     isLoading,
-    onlineUsers,
     text,
     setText,
     sendMessage,
     loadMoreMessages,
     updateMessagesRead,
-    openChatWith,
-    closeChat,
   };
 };

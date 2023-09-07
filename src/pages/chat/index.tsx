@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ConversationsList } from '@/components/conversations-list';
 import { ContactInfo } from '@/components/contact-info';
@@ -9,10 +9,14 @@ import { ProfileHeader } from '@/components/profile-header';
 import { SendAttachmentModal } from '@/components/send-attachment-modal';
 import { SendMessageField } from '@/components/send-message-field';
 import { MessageListSkeleton } from '@/components/skeletons/message-list';
+import { useWebSocketContext } from '@/context/websocket-context';
 import { FileHelper } from '@/helpers/file';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
-import { useChat } from '@/hooks/use-chat';
 import { Attachment } from '@/models/attachment';
+import { Contact } from '@/models/contact';
+import { useGetUser } from '@/queries/user';
+import { useContactList } from './hooks/use-contact-list';
+import { useMessaging } from './hooks/use-messaging';
 import styles from './styles.module.scss';
 
 const MAX_FILE_SIZE_IN_BYTES = 1024 * 1024 * 50; // 50MB
@@ -20,24 +24,45 @@ const MAX_FILE_SIZE_IN_BYTES = 1024 * 1024 * 50; // 50MB
 export const Chat = () => {
   const { isMobile } = useBreakpoints();
   const messagesRef = useRef<HTMLDivElement>(null);
+  const { data: user } = useGetUser();
+  const { connect: connectWebSocket } = useWebSocketContext();
+  const [currentContact, setCurrentContact] = useState<Contact | undefined>();
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const {
-    user,
     conversations,
     contacts,
+    onlineUsers,
+    openChatWith,
+    closeChat,
+    updateConversationOnNewMessage,
+    resetNewMessagesAndUpdateLastMessage,
+  } = useContactList({
     currentContact,
+    setCurrentContact,
+  });
+  const {
     messages,
     hasMoreMessages,
     isLoading,
-    onlineUsers,
     text,
     setText,
     sendMessage,
     loadMoreMessages,
     updateMessagesRead,
-    openChatWith,
-    closeChat,
-  } = useChat(messagesRef);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  } = useMessaging({
+    currentContact,
+    messagesRef,
+    onMessageReceived: (message) =>
+      updateConversationOnNewMessage(message.from, message, true),
+    onMessageSent: (message) =>
+      updateConversationOnNewMessage(message.to, message, false),
+    onMessagesRead: (contactId) =>
+      resetNewMessagesAndUpdateLastMessage(contactId),
+  });
+
+  useEffect(() => {
+    connectWebSocket();
+  }, [connectWebSocket]);
 
   const isMobileConversationVisible = !!currentContact;
 
