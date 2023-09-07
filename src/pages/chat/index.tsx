@@ -17,6 +17,7 @@ import { useContactList } from './hooks/use-contact-list';
 import { useMessaging } from './hooks/use-messaging';
 import styles from './styles.module.scss';
 import { useAttachments } from './hooks/use-attachments';
+import { useChatScroll } from './hooks/use-chat-scroll';
 
 export const Chat = () => {
   const { isMobile } = useBreakpoints();
@@ -24,6 +25,7 @@ export const Chat = () => {
   const { data: user } = useGetUser();
   const { connect: connectWebSocket } = useWebSocketContext();
   const [currentContact, setCurrentContact] = useState<Contact | undefined>();
+  const { isAtBottom, scrollToBottom } = useChatScroll(messagesRef);
   const {
     conversations,
     contacts,
@@ -47,13 +49,14 @@ export const Chat = () => {
     updateMessagesRead,
   } = useMessaging({
     currentContact,
-    messagesRef,
+    isAtScrollBottom: isAtBottom,
     onMessageReceived: (message) =>
       updateConversationOnNewMessage(message.from, message, true),
     onMessageSent: (message) =>
       updateConversationOnNewMessage(message.to, message, false),
     onMessagesRead: (contactId) =>
       resetNewMessagesAndUpdateLastMessage(contactId),
+    scrollToRecentMessage: scrollToBottom,
   });
   const { attachments, updateAttachments, removeAttachments } = useAttachments({
     currentText: text,

@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ReceivedMessageSound from '@/assets/sounds/received-message.mp3';
 import SentMessageSound from '@/assets/sounds/sent-message.mp3';
 import { LAST_CONTACT_ID } from '@/constants/cookies';
@@ -27,18 +27,20 @@ const generateUniqueId = () =>
 
 type Props = {
   currentContact: Contact | undefined;
-  messagesRef: RefObject<HTMLDivElement>;
+  isAtScrollBottom?: boolean;
   onMessageSent?: (message: Message) => void;
   onMessageReceived?: (message: Message) => void;
   onMessagesRead?: (contactId: number) => void;
+  scrollToRecentMessage?: () => void;
 };
 
 export const useMessaging = ({
   currentContact,
-  messagesRef,
+  isAtScrollBottom,
   onMessageSent,
   onMessageReceived,
   onMessagesRead,
+  scrollToRecentMessage,
 }: Props) => {
   const { data: user } = useGetUser();
   const { mutateAsync: mutateGetMessages } = useGetMessagesMutation();
@@ -52,7 +54,6 @@ export const useMessaging = ({
   const [isLoading, setIsLoading] = useState(false);
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isAtBottom, setIsAtBottom] = useState(true);
   const [text, setText] = useState<string>('');
 
   const addNewMessage = (message: Message) => {
@@ -148,13 +149,6 @@ export const useMessaging = ({
     setCurrentPage((prevValue) => prevValue + 1);
   };
 
-  const scrollToRecentMessage = () => {
-    const ref = messagesRef.current;
-    if (ref) {
-      ref.scroll({ top: ref.scrollHeight, behavior: 'smooth' });
-    }
-  };
-
   const hasUnreadMessages = useMemo(
     () =>
       !!messages.some(
@@ -174,7 +168,7 @@ export const useMessaging = ({
 
   const updateMessagesRead = async () => {
     try {
-      if (currentContact && isAtBottom && hasUnreadMessages) {
+      if (currentContact && isAtScrollBottom && hasUnreadMessages) {
         await mutateUpdateRead(currentContact.id);
         setMessagesRead();
         socket?.emit('messagesRead', currentContact.id);
@@ -212,7 +206,6 @@ export const useMessaging = ({
 
   useEffect(() => {
     const resetChat = () => {
-      setIsAtBottom(true);
       setIsLoading(true);
       setMessages([]);
     };
@@ -264,37 +257,16 @@ export const useMessaging = ({
 
     const isSentFromMe = lastMessage.from?.id === user?.id;
     const isSentFromContactAndIsChatActive =
-      !isSentFromMe && isAtBottom && isTabActive;
+      !isSentFromMe && isAtScrollBottom && isTabActive;
 
     if (isSentFromMe || isSentFromContactAndIsChatActive) {
       // Give some time to render the last message
       setTimeout(() => {
-        scrollToRecentMessage();
+        scrollToRecentMessage?.();
       }, 200);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastMessage?.id]);
-
-  useEffect(() => {
-    const addListenerToCheckIfIsAtTheEndOfChat = () => {
-      const messagesContainerRef = messagesRef.current;
-
-      const listener = (event: any) => {
-        const element = event.target;
-        const isAtBottom =
-          element.scrollHeight - element.scrollTop - element.clientHeight <= 30;
-        setIsAtBottom(isAtBottom);
-      };
-
-      messagesContainerRef?.addEventListener('scroll', listener);
-
-      return () => {
-        messagesContainerRef?.removeEventListener('scroll', listener);
-      };
-    };
-    addListenerToCheckIfIsAtTheEndOfChat();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return {
     currentContact,
