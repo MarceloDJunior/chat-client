@@ -39,7 +39,7 @@ export const useContactList = ({
 
   const openChatWith = (contact: Contact) => {
     setCurrentContact(contact);
-    resetNewMessagesAndUpdateLastMessage(contact.id);
+    resetCounterAndUpdateLastMessage(contact.id);
     NotificationHelper.requestPermission();
   };
 
@@ -47,7 +47,7 @@ export const useContactList = ({
     setCurrentContact(undefined);
   };
 
-  const resetNewMessagesAndUpdateLastMessage = (contactId: number) => {
+  const resetCounterAndUpdateLastMessage = (contactId: number) => {
     setConversations((prevConversations) => {
       const newConversations = [...(prevConversations ?? [])];
       return newConversations.map((conversation) => {
@@ -222,6 +222,6 @@ export const useContactList = ({
     openChatWith,
     closeChat,
     updateConversationOnNewMessage,
-    resetNewMessagesAndUpdateLastMessage,
+    resetCounterAndUpdateLastMessage,
   };
 };
