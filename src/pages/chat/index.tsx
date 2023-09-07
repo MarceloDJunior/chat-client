@@ -15,9 +15,9 @@ import { Contact } from '@/models/contact';
 import { useGetUser } from '@/queries/user';
 import { useContactList } from './hooks/use-contact-list';
 import { useMessaging } from './hooks/use-messaging';
-import styles from './styles.module.scss';
 import { useAttachments } from './hooks/use-attachments';
 import { useChatScroll } from './hooks/use-chat-scroll';
+import styles from './styles.module.scss';
 
 export const Chat = () => {
   const { isMobile } = useBreakpoints();
@@ -36,6 +36,7 @@ export const Chat = () => {
     resetNewMessagesAndUpdateLastMessage,
   } = useContactList({
     currentContact,
+    isAtScrollBottom: isAtBottom,
     setCurrentContact,
   });
   const {

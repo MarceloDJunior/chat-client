@@ -19,11 +19,13 @@ const updatePageTitle = (newTitle: string) => {
 
 type Props = {
   currentContact: Contact | undefined;
+  isAtScrollBottom?: boolean;
   setCurrentContact: (contact?: Contact) => void;
 };
 
 export const useContactList = ({
   currentContact,
+  isAtScrollBottom,
   setCurrentContact,
 }: Props) => {
   const { data: user } = useGetUser();
@@ -76,7 +78,7 @@ export const useContactList = ({
       return;
     }
     if (currentContact?.id === message.from.id) {
-      if (!isTabActive) {
+      if (!isTabActive || !isAtScrollBottom) {
         incrementContactNewMessages(message.from.id);
       }
     } else {
