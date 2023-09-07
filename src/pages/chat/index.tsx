@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ConversationsList } from '@/components/conversations-list';
 import { ContactInfo } from '@/components/contact-info';
@@ -10,16 +10,13 @@ import { SendAttachmentModal } from '@/components/send-attachment-modal';
 import { SendMessageField } from '@/components/send-message-field';
 import { MessageListSkeleton } from '@/components/skeletons/message-list';
 import { useWebSocketContext } from '@/context/websocket-context';
-import { FileHelper } from '@/helpers/file';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
-import { Attachment } from '@/models/attachment';
 import { Contact } from '@/models/contact';
 import { useGetUser } from '@/queries/user';
 import { useContactList } from './hooks/use-contact-list';
 import { useMessaging } from './hooks/use-messaging';
 import styles from './styles.module.scss';
-
-const MAX_FILE_SIZE_IN_BYTES = 1024 * 1024 * 50; // 50MB
+import { useAttachments } from './hooks/use-attachments';
 
 export const Chat = () => {
   const { isMobile } = useBreakpoints();
@@ -27,7 +24,6 @@ export const Chat = () => {
   const { data: user } = useGetUser();
   const { connect: connectWebSocket } = useWebSocketContext();
   const [currentContact, setCurrentContact] = useState<Contact | undefined>();
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const {
     conversations,
     contacts,
@@ -59,66 +55,15 @@ export const Chat = () => {
     onMessagesRead: (contactId) =>
       resetNewMessagesAndUpdateLastMessage(contactId),
   });
+  const { attachments, updateAttachments, removeAttachments } = useAttachments({
+    currentText: text,
+  });
 
   useEffect(() => {
     connectWebSocket();
   }, [connectWebSocket]);
 
   const isMobileConversationVisible = !!currentContact;
-
-  const checkAndRemoveBigAttachments = (
-    attachments: Attachment[],
-  ): Attachment[] => {
-    const maxSizeInMB = FileHelper.bytesToMegabytes(MAX_FILE_SIZE_IN_BYTES);
-    if (attachments.length === 1) {
-      const attachment = attachments[0];
-      if (attachment.file.size > MAX_FILE_SIZE_IN_BYTES) {
-        alert(
-          `The selected file exceeds the maximum allowed size of ${maxSizeInMB}MB. Please choose a smaller file.`,
-        );
-        return [];
-      }
-      return [attachment];
-    }
-
-    const allowedAttachments = [];
-    let hasBigFiles = false;
-    for (const attachment of attachments) {
-      if (attachment.file.size > MAX_FILE_SIZE_IN_BYTES) {
-        hasBigFiles = true;
-      } else {
-        allowedAttachments.push(attachment);
-      }
-    }
-    if (hasBigFiles) {
-      if (allowedAttachments.length === 0) {
-        alert(
-          `All the selected files exceed the ${maxSizeInMB}MB limit. Please select files that are each under 2MB.`,
-        );
-      } else {
-        alert(
-          `Some files were larger than the ${maxSizeInMB}MB size limit and have not been uploaded. Please make sure each individual file is smaller than ${maxSizeInMB}MB.`,
-        );
-      }
-    }
-    return allowedAttachments;
-  };
-
-  const handleFilesSelected = useCallback(
-    (files: File[]) => {
-      const attachments: Attachment[] = files.map((file, index) => ({
-        file,
-        subtitle: index === 0 ? text : undefined,
-      }));
-      const allowedAttachments = checkAndRemoveBigAttachments(attachments);
-      setAttachments(allowedAttachments);
-    },
-    [text],
-  );
-
-  const handleAttachmentsClose = useCallback(() => {
-    setAttachments([]);
-  }, []);
 
   const renderChatComponents = () => {
     if (!user) {
@@ -141,7 +86,7 @@ export const Chat = () => {
           {attachments.length > 0 ? (
             <SendAttachmentModal
               attachments={attachments}
-              onClose={handleAttachmentsClose}
+              onClose={removeAttachments}
               onSubmit={sendMessage}
             />
           ) : null}
@@ -150,7 +95,7 @@ export const Chat = () => {
           text={text}
           setText={setText}
           onSubmit={sendMessage}
-          onFilesSelected={handleFilesSelected}
+          onFilesSelected={updateAttachments}
         />
       </div>
     );
@@ -185,7 +130,7 @@ export const Chat = () => {
         ) : currentContact ? ( // render chat components in desktop if contact is selected
           <DragNDropZone
             className={styles.dropzone}
-            onDropFiles={handleFilesSelected}
+            onDropFiles={updateAttachments}
           >
             <div className={styles['contact-header']}>
               <ContactInfo contact={currentContact} />
