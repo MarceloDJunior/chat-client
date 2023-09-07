@@ -115,7 +115,8 @@ export const useMessaging = ({
         addNewMessage(message);
       }
       sentMessageSound.play();
-      await mutateSendMessage(message);
+      const { id } = await mutateSendMessage(message);
+      message.id = id;
       message.pending = false;
       socket?.emit('sendMessage', JSON.stringify(message));
       updateMessage(message);
