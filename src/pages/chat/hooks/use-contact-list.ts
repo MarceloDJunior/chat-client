@@ -71,26 +71,26 @@ export const useContactList = ({
     message: Message,
     received?: boolean,
   ) => {
-    if (hasConversationWith(contact.id)) {
-      if (currentContact?.id === message.from.id) {
-        if (!isTabActive) {
-          incrementContactNewMessages(message.from.id);
-        }
-      } else {
+    if (!hasConversationWith(contact.id)) {
+      addConversation(contact, message, received);
+      return;
+    }
+    if (currentContact?.id === message.from.id) {
+      if (!isTabActive) {
         incrementContactNewMessages(message.from.id);
       }
-      if (!isTabActive) {
-        NotificationHelper.showNotification({
-          title: `New message from ${message.from.name}`,
-          message: message.text,
-          icon: message.from.picture,
-          onClick: () => openChatWith(message.from),
-        });
-      }
-      updateConversationLastMessage(message);
     } else {
-      addConversation(contact, message, received);
+      incrementContactNewMessages(message.from.id);
     }
+    if (!isTabActive) {
+      NotificationHelper.showNotification({
+        title: `New message from ${message.from.name}`,
+        message: message.text,
+        icon: message.from.picture,
+        onClick: () => openChatWith(message.from),
+      });
+    }
+    updateConversationLastMessage(message);
   };
 
   const hasConversationWith = (contactId: number): boolean => {
