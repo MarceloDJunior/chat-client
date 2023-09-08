@@ -163,16 +163,6 @@ export const useContactList = ({
           (contact) => contact.id !== user?.id,
         );
         setOnlineUsers(usersWithoutMine);
-        const isCurrentContactOnline = !!(
-          currentContact?.id &&
-          onlineUsers.find((user) => user.id === currentContact.id)
-        );
-        if (currentContact) {
-          setCurrentContact({
-            ...currentContact,
-            status: isCurrentContactOnline ? 'online' : 'offline',
-          });
-        }
       });
     }
     return () => {
@@ -180,6 +170,23 @@ export const useContactList = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentContact?.id, socket]);
+
+  useEffect(() => {
+    const updateCurrentContactStatus = () => {
+      if (currentContact) {
+        const isCurrentContactOnline = !!(
+          currentContact.id &&
+          onlineUsers.find((user) => user.id === currentContact.id)
+        );
+        setCurrentContact({
+          ...currentContact,
+          status: isCurrentContactOnline ? 'online' : 'offline',
+        });
+      }
+    };
+    updateCurrentContactStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentContact?.id, onlineUsers]);
 
   useEffect(() => {
     const setInitialConversation = () => {
