@@ -5,8 +5,10 @@ import { RefObject, useEffect, useState } from 'react';
 export const useChatScroll = (messagesRef: RefObject<HTMLDivElement>) => {
   const [isAtBottom, setIsAtBottom] = useState(true);
 
+  const messagesUpdated = messagesRef.current;
+
   useEffect(() => {
-    const messagesContainerRef = messagesRef.current;
+    const messagesContainerRef = messagesUpdated;
 
     const listener = (event: any) => {
       const element = event.target;
@@ -20,8 +22,7 @@ export const useChatScroll = (messagesRef: RefObject<HTMLDivElement>) => {
     return () => {
       messagesContainerRef?.removeEventListener('scroll', listener);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [messagesUpdated]);
 
   const scrollToBottom = () => {
     const ref = messagesRef.current;
