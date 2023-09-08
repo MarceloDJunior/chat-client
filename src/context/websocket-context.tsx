@@ -19,11 +19,13 @@ type WebSocketProviderProps = {
   children: React.ReactNode;
 };
 
+let socketConnected = false;
+
 export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   const connect = useCallback(() => {
-    if (socket) return;
+    if (socketConnected) return;
     const newSocket = io(WS_URL, {
       multiplex: true,
       withCredentials: isDev ? false : true,
@@ -34,7 +36,8 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
       },
     });
     setSocket(newSocket);
-  }, [socket]);
+    socketConnected = true;
+  }, []);
 
   return (
     <WebSocketContext.Provider value={{ socket, connect }}>
