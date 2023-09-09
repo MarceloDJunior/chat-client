@@ -61,23 +61,27 @@ export const MessageList = ({
       switch (FileHelper.getFileType(message.fileName)) {
         case FileType.IMAGE:
           return (
-            <motion.img
-              layoutId={animationId}
-              src={message.fileUrl}
-              className={styles['img-preview']}
-              onClick={openMedia}
-            />
+            <div className={styles['media-wrapper']}>
+              <motion.img
+                layoutId={animationId}
+                src={message.fileUrl}
+                className={styles['img-preview']}
+                onClick={openMedia}
+              />
+            </div>
           );
         case FileType.VIDEO:
           return (
-            <motion.div
-              layoutId={animationId}
-              role="button"
-              onClick={openMedia}
-              className={styles['video-preview']}
-            >
-              <video src={message.fileUrl} onClick={openMedia} controls />
-            </motion.div>
+            <div className={styles['media-wrapper']}>
+              <motion.div
+                layoutId={animationId}
+                role="button"
+                onClick={openMedia}
+                className={styles['video-preview']}
+              >
+                <video src={message.fileUrl} onClick={openMedia} />
+              </motion.div>
+            </div>
           );
         default:
           return (
