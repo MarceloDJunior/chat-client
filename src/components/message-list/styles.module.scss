@@ -78,14 +78,35 @@
       .video-preview {
         margin-bottom: 6px;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+
+        &:after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-color: rgba(0, 0, 0, 0.3);
+        }
 
         video {
           pointer-events: none;
           object-fit: contain;
-          aspect-ratio: 4 / 3;
-          width: 100%;
-          max-width: 220px;
+          width: auto;
+          height: auto;
+          max-height: 220px;
+          max-width: 100%;
           border-radius: 10px;
+          position: relative;
+        }
+
+        svg {
+          position: absolute;
+          width: 60px;
+          height: 60px;
+          color: #eeeeee;
+          z-index: 1;
         }
       }
 

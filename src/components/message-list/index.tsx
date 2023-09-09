@@ -2,6 +2,7 @@ import { Fragment, useCallback, useMemo, useState } from 'react';
 import classNames from 'classnames';
 import { motion } from 'framer-motion';
 import { ReactComponent as DownloadIcon } from '@/assets/icons/download.svg';
+import { ReactComponent as PlayIcon } from '@/assets/icons/play.svg';
 import { DateHelper } from '@/helpers/date';
 import { FileHelper, FileType } from '@/helpers/file';
 import { Message } from '@/models/message';
@@ -80,6 +81,7 @@ export const MessageList = ({
                 className={styles['video-preview']}
               >
                 <video src={message.fileUrl} onClick={openMedia} />
+                <PlayIcon />
               </motion.div>
             </div>
           );
