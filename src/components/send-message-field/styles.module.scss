@@ -19,6 +19,7 @@
     border-radius: 8px;
     background-color: #283045;
     border: none;
+    width: 100%;
 
     @include breakpoints.sm {
       height: 54px;
