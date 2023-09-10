@@ -109,7 +109,10 @@ export const useMessaging = ({
         addNewMessage(message);
 
         const fileUrl = await mutateGetPresignedUrl(file.name);
-        await S3Helper.uploadFile(file, fileUrl);
+        await S3Helper.uploadFile(file, fileUrl, (progress) => {
+          message.progress = progress;
+          updateMessage(message);
+        });
         message.fileUrl = S3Helper.getFileUrlFromPresignedUrl(fileUrl);
       } else {
         addNewMessage(message);

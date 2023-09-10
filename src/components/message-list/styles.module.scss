@@ -87,7 +87,7 @@
           content: '';
           position: absolute;
           inset: 0;
-          background-color: rgba(0, 0, 0, 0.3);
+          background-color: rgba(0, 0, 0, 0.2);
         }
 
         video {
@@ -135,7 +135,7 @@
     }
 
     &.pending {
-      opacity: 0.5;
+      opacity: 0.7;
     }
   }
 }

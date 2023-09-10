@@ -9,6 +9,7 @@ import { Message } from '@/models/message';
 import { User } from '@/models/user';
 import { MessageStatus } from '../message-status';
 import { MediaViewer } from '../media-viewer';
+import { ProgressBar } from '../progress-bar';
 import styles from './styles.module.scss';
 
 type MessageListProps = {
@@ -131,6 +132,9 @@ export const MessageList = ({
             >
               <div className={styles.message}>
                 {renderMessageMedia(message)}
+                {message.pending && message.fileName && (
+                  <ProgressBar progress={message.progress ?? 0} />
+                )}
                 <div className={styles.text}>{message.text}</div>
                 <div className={styles.time}>
                   {DateHelper.formatHoursMinutes(message.dateTime)}
