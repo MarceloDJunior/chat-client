@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useMemo, useState } from 'react';
 import classNames from 'classnames';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ReactComponent as DownloadIcon } from '@/assets/icons/download.svg';
 import { ReactComponent as PlayIcon } from '@/assets/icons/play.svg';
 import { DateHelper } from '@/helpers/date';
@@ -51,6 +51,7 @@ export const MessageList = ({
   }, [onLoadMoreClick]);
 
   const getLayoutShiftPreventionStyles = (fileUrl: string) => {
+    // Preload the image size from the URL params to avoid layout shift
     const url = new URL(fileUrl);
     const width = Number(url.searchParams.get('width'));
     const height = Number(url.searchParams.get('height'));
@@ -69,7 +70,10 @@ export const MessageList = ({
 
   const renderMessageMedia = (message: Message) => {
     if (message.fileName && message.fileUrl) {
-      const style = getLayoutShiftPreventionStyles(message.fileUrl);
+      const wrapperStyle = getLayoutShiftPreventionStyles(message.fileUrl);
+      // When image is already uploaded, we need to fill the preloaded size to avoid layout shift
+      // When it's being uploaded, the local image is already loaded, so we use the default size
+      const imageSize = message.pending ? 'auto' : '100%';
       const animationId = String(message.id);
       const openMedia = () =>
         setCurrentOpenMedia({
@@ -81,23 +85,25 @@ export const MessageList = ({
       switch (FileHelper.getFileType(message.fileName)) {
         case FileType.IMAGE:
           return (
-            <div className={styles['media-wrapper']} style={style}>
+            <div className={styles['media-wrapper']} style={wrapperStyle}>
               <motion.img
                 layoutId={animationId}
                 src={message.fileUrl}
                 className={styles['img-preview']}
                 onClick={openMedia}
+                style={{ width: imageSize, height: imageSize }}
               />
             </div>
           );
         case FileType.VIDEO:
           return (
-            <div className={styles['media-wrapper']} style={style}>
+            <div className={styles['media-wrapper']} style={wrapperStyle}>
               <motion.div
                 layoutId={animationId}
                 role="button"
                 onClick={openMedia}
                 className={styles['video-preview']}
+                style={{ width: imageSize, height: imageSize }}
               >
                 <video src={message.fileUrl} onClick={openMedia} />
                 <PlayIcon />
@@ -150,9 +156,11 @@ export const MessageList = ({
             >
               <div className={styles.message}>
                 {renderMessageMedia(message)}
-                {message.pending && message.fileName && (
-                  <ProgressBar progress={message.progress ?? 0} />
-                )}
+                <AnimatePresence>
+                  {message.pending && message.fileName && (
+                    <ProgressBar progress={message.progress ?? 0} />
+                  )}
+                </AnimatePresence>
                 <div className={styles.text}>{message.text}</div>
                 <div className={styles.time}>
                   {DateHelper.formatHoursMinutes(message.dateTime)}

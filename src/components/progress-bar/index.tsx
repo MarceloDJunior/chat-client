@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import styles from './styles.module.scss';
 
 type ProgressBarProps = {
@@ -6,8 +7,13 @@ type ProgressBarProps = {
 
 export const ProgressBar = ({ progress }: ProgressBarProps) => {
   return (
-    <div className={styles.container}>
+    <motion.div
+      initial={{ scaleY: 0, opacity: 0 }}
+      animate={{ scaleY: 1, opacity: 1 }}
+      exit={{ scaleY: 0, opacity: 0.5 }}
+      className={styles.container}
+    >
       <div className={styles.progress} style={{ width: `${progress}%` }}></div>
-    </div>
+    </motion.div>
   );
 };
