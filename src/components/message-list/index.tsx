@@ -50,8 +50,26 @@ export const MessageList = ({
     }, 200);
   }, [onLoadMoreClick]);
 
+  const getLayoutShiftPreventionStyles = (fileUrl: string) => {
+    const url = new URL(fileUrl);
+    const width = Number(url.searchParams.get('width'));
+    const height = Number(url.searchParams.get('height'));
+    const style: Record<string, any> = {};
+    if (width && height) {
+      const aspectRatio = width / height;
+      style.aspectRatio = aspectRatio;
+      if (width > height) {
+        style.width = Math.min(width, 220);
+      } else {
+        style.height = Math.min(height, 220);
+      }
+    }
+    return style;
+  };
+
   const renderMessageMedia = (message: Message) => {
     if (message.fileName && message.fileUrl) {
+      const style = getLayoutShiftPreventionStyles(message.fileUrl);
       const animationId = String(message.id);
       const openMedia = () =>
         setCurrentOpenMedia({
@@ -63,7 +81,7 @@ export const MessageList = ({
       switch (FileHelper.getFileType(message.fileName)) {
         case FileType.IMAGE:
           return (
-            <div className={styles['media-wrapper']}>
+            <div className={styles['media-wrapper']} style={style}>
               <motion.img
                 layoutId={animationId}
                 src={message.fileUrl}
@@ -74,7 +92,7 @@ export const MessageList = ({
           );
         case FileType.VIDEO:
           return (
-            <div className={styles['media-wrapper']}>
+            <div className={styles['media-wrapper']} style={style}>
               <motion.div
                 layoutId={animationId}
                 role="button"

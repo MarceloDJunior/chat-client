@@ -15,6 +15,7 @@ import {
 import { S3Helper } from '@/helpers/s3';
 import { useTabActive } from '@/hooks/use-tab-active';
 import { useGetUser } from '@/queries/user';
+import { MediaHelper } from '@/helpers/media';
 
 let lastMessageId: number;
 const receivedMessageSound = new Audio(ReceivedMessageSound);
@@ -95,6 +96,21 @@ export const useMessaging = ({
     return message;
   };
 
+  const getUrlWithMediaDimensions = async (
+    presignedUrl: string,
+    file: File,
+  ) => {
+    let fileUrl = S3Helper.getFileUrlFromPresignedUrl(presignedUrl);
+    const dimensions = await MediaHelper.getDimensions(file);
+    if (dimensions) {
+      const newUrl = new URL(fileUrl);
+      newUrl.searchParams.append('width', dimensions.width.toString());
+      newUrl.searchParams.append('height', dimensions.height.toString());
+      fileUrl = newUrl.toString();
+    }
+    return fileUrl;
+  };
+
   const sendMessage = async (text: string, file?: File): Promise<boolean> => {
     try {
       const message = createPendingMessage(text, file);
@@ -108,12 +124,15 @@ export const useMessaging = ({
         message.fileUrl = tempFileURL;
         addNewMessage(message);
 
-        const fileUrl = await mutateGetPresignedUrl(file.name);
-        await S3Helper.uploadFile(file, fileUrl, (progress) => {
+        const presignedFileUrl = await mutateGetPresignedUrl(file.name);
+        await S3Helper.uploadFile(file, presignedFileUrl, (progress) => {
           message.progress = progress;
           updateMessage(message);
         });
-        message.fileUrl = S3Helper.getFileUrlFromPresignedUrl(fileUrl);
+        message.fileUrl = await getUrlWithMediaDimensions(
+          presignedFileUrl,
+          file,
+        );
       } else {
         addNewMessage(message);
       }
