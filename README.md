@@ -19,6 +19,10 @@ Backend Repo: https://github.com/MarceloDJunior/chat-api
 - AWS CodePipeline & CodeBuild: Fully managed continuous delivery service that helps you automate your release pipelines.
 - Framer Motion: A production-ready motion library for React. Used to create animations in the frontend.
 
+## Demo
+
+https://github.com/MarceloDJunior/chat-client/assets/17832776/fcb16260-d1d7-4d47-9d0f-ded2ab68a56e
+
 ## Setup and Installation
 
 To run this project, you will need to have Node.js and npm installed.
