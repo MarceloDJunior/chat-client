@@ -14,6 +14,7 @@ Backend Repo: https://github.com/MarceloDJunior/chat-api
 - Vite: A build tool that aims to provide a faster and leaner development experience for modern web projects.
 - Auth0: A flexible, drop-in solution to add authentication and authorization services to your applications.
 - Socket.IO: A JavaScript library for real-time web applications. It enables real-time, bidirectional and event-based communication.
+- React Query: A data-fetching and state management library for React applications. It provides essential features for synchronizing, caching, and updating server state in React applications.
 - AWS S3: An object storage service that offers industry-leading scalability, data availability, security, and performance. This is used to store files uploaded through the chat.
 - AWS CodePipeline & CodeBuild: Fully managed continuous delivery service that helps you automate your release pipelines.
 - Framer Motion: A production-ready motion library for React. Used to create animations in the frontend.
