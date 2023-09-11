@@ -30,7 +30,7 @@ To run this project, you will need to have Node.js and npm installed.
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/chat-client.git
+git clone https://github.com/MarceloDJunior/chat-client.git
 ```
 
 2. Navigate to the project directory:
