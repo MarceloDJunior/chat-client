@@ -1,18 +1,22 @@
+@use '@/styles/breakpoints.module.scss'as breakpoints;
+
 .container {
   position: relative;
   display: flex;
-  align-items: center;
-  justify-content: center;
   justify-content: center;
   overflow: hidden;
   flex: 1;
   width: 100%;
 
-  .prev-button {
+  .prev-button,
+  .next-button {
     position: absolute;
     left: 0;
+    top: 50%;
+    transform: translateY(-50%);
     background-color: transparent;
     z-index: 1;
+    padding: 8px 0;
 
     svg {
       width: 50px;
@@ -22,16 +26,8 @@
   }
 
   .next-button {
-    position: absolute;
+    left: unset;
     right: 0;
-    background-color: transparent;
-    z-index: 1;
-
-    svg {
-      width: 50px;
-      height: 50px;
-      color: #c6c6c6;
-    }
   }
 
   .content {
@@ -42,6 +38,11 @@
     .item {
       flex: 0 0 auto;
       width: 100%;
+      padding: 0 20px;
+
+      @include breakpoints.sm {
+        padding: 0;
+      }
     }
   }
 }

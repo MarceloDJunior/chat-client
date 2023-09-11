@@ -1,3 +1,5 @@
+@use '@/styles/breakpoints.module.scss'as breakpoints;
+
 .container {
   position: absolute;
   inset: 0;
@@ -5,7 +7,11 @@
   flex-direction: column;
   background-color: #283045;
   z-index: 2;
-  padding: 30px 24px;
+  padding: 24px 12px;
+
+  @include breakpoints.sm {
+    padding: 30px 24px;
+  }
 
   .close-button {
     background-color: transparent;
@@ -43,6 +49,7 @@
         align-items: center;
         justify-content: center;
         margin-bottom: 20px;
+        height: 100%;
 
         .icon {
           width: 160px;
@@ -51,8 +58,8 @@
 
         img,
         video {
-          width: min(100%, 400px);
-          height: min(100%, 400px);
+          width: min(calc(100% - 80px), 400px);
+          height: min(calc(100% - 80px), 400px);
           object-fit: contain;
         }
 
