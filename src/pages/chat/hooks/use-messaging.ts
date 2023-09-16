@@ -179,20 +179,20 @@ export const useMessaging = ({
     [currentContact?.id, messages],
   );
 
-  const setMessagesRead = () => {
-    setMessages((prevMessages) =>
-      prevMessages.map((message) => ({ ...message, read: true })),
-    );
-    if (onMessagesRead && currentContact) {
-      onMessagesRead?.(currentContact.id);
+  const setMessagesRead = (fromId: number) => {
+    if (currentContact?.id === fromId) {
+      setMessages((prevMessages) =>
+        prevMessages.map((message) => ({ ...message, read: true })),
+      );
     }
+    onMessagesRead?.(fromId);
   };
 
   const updateMessagesRead = async () => {
     try {
       if (currentContact && isAtScrollBottom && hasUnreadMessages) {
         await mutateUpdateRead(currentContact.id);
-        setMessagesRead();
+        setMessagesRead(currentContact.id);
         socket?.emit('messagesRead', currentContact.id);
       }
     } catch (err) {
@@ -263,8 +263,8 @@ export const useMessaging = ({
         handleNewMessage(message);
       });
 
-      socket.on('messagesRead', () => {
-        setMessagesRead();
+      socket.on('messagesRead', (fromId: string) => {
+        setMessagesRead(Number(fromId));
       });
     }
     return () => {

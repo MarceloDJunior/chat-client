@@ -33,7 +33,7 @@ export const Chat = () => {
     openChatWith,
     closeChat,
     updateConversationOnNewMessage,
-    resetCounterAndUpdateLastMessage,
+    resetCounterAndSetReadLastMessage,
   } = useContactList({
     currentContact,
     isAtScrollBottom: isAtBottom,
@@ -55,7 +55,7 @@ export const Chat = () => {
       updateConversationOnNewMessage(message.from, message, true),
     onMessageSent: (message) =>
       updateConversationOnNewMessage(message.to, message, false),
-    onMessagesRead: (contactId) => resetCounterAndUpdateLastMessage(contactId),
+    onMessagesRead: (contactId) => resetCounterAndSetReadLastMessage(contactId),
     scrollToRecentMessage: scrollToBottom,
   });
   const { attachments, updateAttachments, removeAttachments } = useAttachments({
