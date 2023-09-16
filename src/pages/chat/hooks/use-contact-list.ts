@@ -59,7 +59,7 @@ export const useContactList = ({
             newMessages: 0,
             lastMessage: {
               ...lastMessage,
-              read: isSent ? true : lastMessage?.read,
+              read: isSent ? lastMessage?.read : true,
             },
           } as Conversation;
         }
