@@ -119,7 +119,11 @@ export const Chat = () => {
           onContactClick={openChatWith}
         />
       </div>
-      <main className={styles['main-content']} onMouseMove={updateMessagesRead}>
+      <main
+        className={styles['main-content']}
+        onMouseMove={updateMessagesRead}
+        onTouchMove={updateMessagesRead}
+      >
         {isMobile ? ( // render chat components inside navigation page on mobile
           <ModalPageWithNavigation
             isVisible={isMobileConversationVisible}
