@@ -25,7 +25,7 @@ export const useGetMessagesMutation = () =>
   useMutation('getMessages', getMessages);
 
 const getPresignedUrl = async (filename: string): Promise<string> => {
-  const response = await api.get(`/conversations/presigned-url/${filename}`);
+  const response = await api.get(`/messages/presigned-url/${filename}`);
   if (response.status !== 200) {
     throw new Error('An error occurred while getting the URL');
   }
