@@ -25,7 +25,11 @@ export const Chat = () => {
   const { data: user } = useGetUser();
   const { connect: connectWebSocket } = useWebSocketContext();
   const [currentContact, setCurrentContact] = useState<Contact | undefined>();
-  const { isAtBottom, scrollToBottom } = useChatScroll(messagesRef);
+  const {
+    distanceFromBottom,
+    scrollToBottom,
+    preserveScrollPositionOnNextChange,
+  } = useChatScroll(messagesRef);
   const {
     conversations,
     contacts,
@@ -36,7 +40,7 @@ export const Chat = () => {
     resetCounterAndSetReadLastMessage,
   } = useContactList({
     currentContact,
-    isAtScrollBottom: isAtBottom,
+    distanceFromBottom,
     setCurrentContact,
   });
   const {
@@ -50,13 +54,14 @@ export const Chat = () => {
     updateMessagesRead,
   } = useMessaging({
     currentContact,
-    isAtScrollBottom: isAtBottom,
+    distanceFromBottom,
     onMessageReceived: (message) =>
       updateConversationOnNewMessage(message.from, message, true),
     onMessageSent: (message) =>
       updateConversationOnNewMessage(message.to, message, false),
     onMessagesRead: (contactId) => resetCounterAndSetReadLastMessage(contactId),
     scrollToRecentMessage: scrollToBottom,
+    preserveScrollPositionOnNextChange,
   });
   const { attachments, updateAttachments, removeAttachments } = useAttachments({
     currentText: text,

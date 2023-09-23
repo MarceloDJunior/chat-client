@@ -3,26 +3,62 @@
 import { RefObject, useEffect, useState } from 'react';
 
 export const useChatScroll = (messagesRef: RefObject<HTMLDivElement>) => {
-  const [isAtBottom, setIsAtBottom] = useState(true);
-
-  const messagesUpdated = messagesRef.current;
+  const [distanceFromBottom, setDistanceFromBottom] = useState(0);
+  const [preserveScrollPosition, setPreserveScrollPosition] = useState(false);
+  const [prevScrollHeight, setPrevScrollHeight] = useState(0);
+  const messagesUpdatedRef = messagesRef.current;
 
   useEffect(() => {
-    const messagesContainerRef = messagesUpdated;
-
-    const listener = (event: any) => {
-      const element = event.target;
-      const isAtBottom =
-        element.scrollHeight - element.scrollTop - element.clientHeight <= 30;
-      setIsAtBottom(isAtBottom);
+    const scrollPositionListener = (event: Event) => {
+      const element = event.target as HTMLElement;
+      const distanceFromBottom =
+        element.scrollHeight - element.scrollTop - element.clientHeight;
+      setDistanceFromBottom(distanceFromBottom);
     };
 
-    messagesContainerRef?.addEventListener('scroll', listener);
+    messagesUpdatedRef?.addEventListener('scroll', scrollPositionListener);
 
     return () => {
-      messagesContainerRef?.removeEventListener('scroll', listener);
+      messagesUpdatedRef?.removeEventListener('scroll', scrollPositionListener);
     };
-  }, [messagesUpdated]);
+  }, [messagesUpdatedRef]);
+
+  useEffect(() => {
+    const messagesContainerObserver = new MutationObserver(() => {
+      const hasLodedOlderMessages =
+        messagesUpdatedRef &&
+        messagesUpdatedRef.scrollHeight !== prevScrollHeight;
+      if (hasLodedOlderMessages) {
+        const currentScrollHeight = messagesUpdatedRef.scrollHeight;
+        if (preserveScrollPosition) {
+          // Preserve the scroll position, keeping the same distance from the bottom it had before
+          messagesUpdatedRef.scrollTop =
+            currentScrollHeight -
+            distanceFromBottom -
+            messagesUpdatedRef.clientHeight;
+          setPreserveScrollPosition(false);
+        }
+        setPrevScrollHeight(messagesUpdatedRef.scrollHeight);
+      }
+    });
+
+    // Add observer to the first child of the messages ref, the messages container
+    // Messages ref = holds the scrollable div with fixed size.
+    // Messages container = holds all the messages and have a dynamic height.
+    // This way, we detect when new messages are added to the container div.
+    if (messagesUpdatedRef?.firstElementChild) {
+      messagesContainerObserver.observe(messagesUpdatedRef.firstElementChild, {
+        childList: true,
+      });
+    }
+
+    return () => messagesContainerObserver.disconnect();
+  }, [
+    distanceFromBottom,
+    messagesUpdatedRef,
+    preserveScrollPosition,
+    prevScrollHeight,
+  ]);
 
   const scrollToBottom = () => {
     const ref = messagesRef.current;
@@ -32,7 +68,8 @@ export const useChatScroll = (messagesRef: RefObject<HTMLDivElement>) => {
   };
 
   return {
-    isAtBottom,
+    distanceFromBottom,
     scrollToBottom,
+    preserveScrollPositionOnNextChange: () => setPreserveScrollPosition(true),
   };
 };

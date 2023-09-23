@@ -28,20 +28,22 @@ const generateUniqueId = () =>
 
 type Props = {
   currentContact: Contact | undefined;
-  isAtScrollBottom?: boolean;
+  distanceFromBottom?: number;
   onMessageSent?: (message: Message) => void;
   onMessageReceived?: (message: Message) => void;
   onMessagesRead?: (contactId: number) => void;
   scrollToRecentMessage?: () => void;
+  preserveScrollPositionOnNextChange?: () => void;
 };
 
 export const useMessaging = ({
   currentContact,
-  isAtScrollBottom,
+  distanceFromBottom = 0,
   onMessageSent,
   onMessageReceived,
   onMessagesRead,
   scrollToRecentMessage,
+  preserveScrollPositionOnNextChange,
 }: Props) => {
   const { data: user } = useGetUser();
   const { mutateAsync: mutateGetMessages } = useGetMessagesMutation();
@@ -56,6 +58,8 @@ export const useMessaging = ({
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [text, setText] = useState<string>('');
+
+  const isAtScrollBottom = distanceFromBottom <= 30;
 
   const addNewMessage = (message: Message) => {
     setMessages((prevMessages) => {
@@ -161,12 +165,25 @@ export const useMessaging = ({
     onMessageReceived?.(message);
   };
 
+  const updateMessages = (data: Message[]) => {
+    setMessages((prevData) => {
+      // Remove duplicates
+      const newData = data.filter(
+        (dataItem) =>
+          !prevData.some((prevDataItem) => prevDataItem.id === dataItem.id),
+      );
+
+      return prevData.concat(newData);
+    });
+  };
+
   const loadMoreMessages = async () => {
+    preserveScrollPositionOnNextChange?.();
     const { data, meta } = await mutateGetMessages({
       contactId: currentContact?.id ?? 0,
       page: currentPage + 1,
     });
-    setMessages((prevData) => prevData.concat(data));
+    updateMessages(data);
     setHasMoreMessages(meta.hasNextPage);
     setCurrentPage((prevValue) => prevValue + 1);
   };

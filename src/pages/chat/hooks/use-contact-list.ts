@@ -19,13 +19,13 @@ const updatePageTitle = (newTitle: string) => {
 
 type Props = {
   currentContact: Contact | undefined;
-  isAtScrollBottom?: boolean;
+  distanceFromBottom?: number;
   setCurrentContact: (contact?: Contact) => void;
 };
 
 export const useContactList = ({
   currentContact,
-  isAtScrollBottom,
+  distanceFromBottom = 0,
   setCurrentContact,
 }: Props) => {
   const { data: user } = useGetUser();
@@ -36,6 +36,8 @@ export const useContactList = ({
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<Contact[]>([]);
+
+  const isAtScrollBottom = distanceFromBottom <= 30;
 
   const openChatWith = (contact: Contact) => {
     setCurrentContact(contact);
