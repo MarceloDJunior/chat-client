@@ -1,10 +1,20 @@
 # Chat Client Frontend
 
-This is the frontend for a chat application built with React. It includes real-time communication using Socket.IO, file uploading capabilities, and uses Auth0 for authentication. Files uploaded through the chat are stored in AWS S3 using presigned URLs. It is built using Vite and deployed to AWS using CodePipeline and CodeBuild.
+This is the frontend of a real-time chat application built with React. The application supports real-time messaging using websockets, file sharing, and user authentication.
 
 You can access the live project at [chat-api.link](http://chat-api.link).
 
-Backend Repo: https://github.com/MarceloDJunior/chat-api
+Backend Repo: [https://github.com/MarceloDJunior/chat-api](https://github.com/MarceloDJunior/chat-api)
+
+## Key Features
+
+- Real-time messaging: Send and receive messages instantly.
+- File sharing: Send single or multiple files via click or drag-and-drop using S3 presigned URLs.
+- Contact list: View online and offline users in real-time.
+- Message notification: Keep track of new messages with a counter.
+- Message status: Track the status of your messages (pending, sent, and read).
+- Pagination: Access older messages easily using a "Load More" button.
+- Secure access: Authenticate users using Auth0.
 
 ## Technologies Used
 
@@ -12,8 +22,8 @@ Backend Repo: https://github.com/MarceloDJunior/chat-api
 - TypeScript: A strict syntactical superset of JavaScript, adding optional static typing.
 - SCSS: A preprocessor scripting language that is interpreted or compiled into Cascading Style Sheets (CSS).
 - Vite: A build tool that aims to provide a faster and leaner development experience for modern web projects.
-- Auth0: A flexible, drop-in solution to add authentication and authorization services to your applications.
 - Socket.IO: A JavaScript library for real-time web applications. It enables real-time, bidirectional and event-based communication.
+- Auth0: A flexible, drop-in solution to add authentication and authorization services to your applications.
 - React Query: A data-fetching and state management library for React applications. It provides essential features for synchronizing, caching, and updating server state in React applications.
 - AWS S3: An object storage service that offers industry-leading scalability, data availability, security, and performance. This is used to store files uploaded through the chat.
 - AWS CodePipeline & CodeBuild: Fully managed continuous delivery service that helps you automate your release pipelines.
