@@ -2,6 +2,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { ACCESS_TOKEN } from '@/constants/cookies';
 import { useWebSocketContext } from '@/context/websocket-context';
 import { CookiesHelper } from '@/helpers/cookies';
+import PlaceholderImage from '@/assets/images/profile-placeholder.jpg';
 import { User } from '@/models/user';
 import styles from './styles.module.scss';
 
@@ -21,7 +22,11 @@ export const ProfileHeader = ({ user }: ProfileHeaderProps) => {
 
   return (
     <div className={styles.container}>
-      <img src={user.picture} alt="Picture" className={styles.picture} />
+      <img
+        src={user.picture ?? PlaceholderImage}
+        alt="Picture"
+        className={styles.picture}
+      />
       <div className={styles.wrapper}>
         <h2 title={user.name}>{user.name}</h2>
         <button onClick={handleLogout}>Disconnect</button>
