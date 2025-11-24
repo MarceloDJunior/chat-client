@@ -18,6 +18,8 @@ import { useMessaging } from './hooks/use-messaging';
 import { useAttachments } from './hooks/use-attachments';
 import { useChatScroll } from './hooks/use-chat-scroll';
 import styles from './styles.module.scss';
+import { VideoCallModal } from '@/components/video-call-modal';
+import { useVideoCall } from './hooks/use-video-call';
 
 export const Chat = () => {
   const { isMobile } = useBreakpoints();
@@ -25,6 +27,7 @@ export const Chat = () => {
   const { data: user } = useGetUser();
   const { connect: connectWebSocket } = useWebSocketContext();
   const [currentContact, setCurrentContact] = useState<Contact | undefined>();
+  const [isVideoOpen, setVideoOpen] = useState<boolean>(false);
   const {
     distanceFromBottom,
     scrollToBottom,
@@ -66,6 +69,11 @@ export const Chat = () => {
   const { attachments, updateAttachments, removeAttachments } = useAttachments({
     currentText: text,
   });
+  const { openCameraAndGetStream, closeCamera } = useVideoCall();
+
+  const onVideoCallClick = () => {
+    setVideoOpen(true);
+  };
 
   useEffect(() => {
     connectWebSocket();
@@ -134,7 +142,12 @@ export const Chat = () => {
             isVisible={isMobileConversationVisible}
             onClose={closeChat}
             headerContent={
-              currentContact ? <ContactInfo contact={currentContact} /> : null
+              currentContact ? (
+                <ContactInfo
+                  contact={currentContact}
+                  onVideoCallClick={onVideoCallClick}
+                />
+              ) : null
             }
           >
             {renderChatComponents()}
@@ -145,12 +158,24 @@ export const Chat = () => {
             onDropFiles={updateAttachments}
           >
             <div className={styles['contact-header']}>
-              <ContactInfo contact={currentContact} />
+              <ContactInfo
+                contact={currentContact}
+                onVideoCallClick={onVideoCallClick}
+              />
             </div>
             {renderChatComponents()}
           </DragNDropZone>
         ) : (
           <h3>Select a user to start a conversation</h3>
+        )}
+        {isVideoOpen && (
+          <VideoCallModal
+            getVideoStream={openCameraAndGetStream}
+            onClose={() => {
+              closeCamera();
+              setVideoOpen(false);
+            }}
+          />
         )}
       </main>
     </div>
