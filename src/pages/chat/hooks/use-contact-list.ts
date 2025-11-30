@@ -10,6 +10,7 @@ import { useGetContactsQuery } from '@/queries/contacts';
 import { useGetConversationsQuery } from '@/queries/conversations';
 import { useGetUser } from '@/queries/user';
 import { useTabActive } from '@/hooks/use-tab-active';
+import { SocketEvent } from '@/constants/socket-events';
 
 const initialContactId = CookiesHelper.get(LAST_CONTACT_ID);
 
@@ -173,7 +174,7 @@ export const useContactList = ({
 
   useEffect(() => {
     if (socket) {
-      socket.on('connectedUsers', (payload: string) => {
+      socket.on(SocketEvent.CONNECTED_USERS, (payload: string) => {
         const onlineUsers = JSON.parse(payload) as Contact[];
         const usersWithoutMine = onlineUsers.filter(
           (contact) => contact.id !== user?.id,
@@ -182,7 +183,7 @@ export const useContactList = ({
       });
     }
     return () => {
-      socket?.off('connectedUsers');
+      socket?.off(SocketEvent.CONNECTED_USERS);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentContact?.id, socket]);

@@ -16,6 +16,7 @@ import { S3Helper } from '@/helpers/s3';
 import { useTabActive } from '@/hooks/use-tab-active';
 import { useGetUser } from '@/queries/user';
 import { MediaHelper } from '@/helpers/media';
+import { SocketEvent } from '@/constants/socket-events';
 
 let lastMessageId: number;
 const receivedMessageSound = new Audio(ReceivedMessageSound);
@@ -143,7 +144,7 @@ export const useMessaging = ({
       sentMessageSound.play();
       await mutateSendMessage(message);
       message.pending = false;
-      socket?.emit('sendMessage', JSON.stringify(message));
+      socket?.emit(SocketEvent.SEND_MESSAGE, JSON.stringify(message));
       updateMessage(message);
       onMessageSent?.(message);
       return true;
@@ -210,7 +211,7 @@ export const useMessaging = ({
       if (currentContact && isAtScrollBottom && hasUnreadMessages) {
         await mutateUpdateRead(currentContact.id);
         setMessagesRead(currentContact.id);
-        socket?.emit('messagesRead', currentContact.id);
+        socket?.emit(SocketEvent.MESSAGES_READ, currentContact.id);
       }
     } catch (err) {
       console.error(err);
@@ -275,18 +276,18 @@ export const useMessaging = ({
 
   useEffect(() => {
     if (socket) {
-      socket.on('messageReceived', (payload: string) => {
+      socket.on(SocketEvent.MESSAGE_RECEIVED, (payload: string) => {
         const message: Message = JSON.parse(payload);
         handleNewMessage(message);
       });
 
-      socket.on('messagesRead', (fromId: string) => {
+      socket.on(SocketEvent.MESSAGES_READ, (fromId: string) => {
         setMessagesRead(Number(fromId));
       });
     }
     return () => {
-      socket?.off('messageReceived');
-      socket?.off('messagesRead');
+      socket?.off(SocketEvent.MESSAGE_RECEIVED);
+      socket?.off(SocketEvent.MESSAGES_READ);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentContact?.id, socket, handleNewMessage]);
