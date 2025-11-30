@@ -69,9 +69,21 @@ export const Chat = () => {
   const { attachments, updateAttachments, removeAttachments } = useAttachments({
     currentText: text,
   });
-  const { openCameraAndGetStream, closeCamera } = useVideoCall();
+  const {
+    openCameraAndGetStream,
+    remoteStream,
+    startTransmission,
+    endCall,
+    setDestinationContact,
+  } = useVideoCall();
+  const [localStream, setLocalStream] = useState<MediaStream>();
 
-  const onVideoCallClick = () => {
+  const onVideoCallClick = async () => {
+    if (!currentContact) return;
+    setDestinationContact(currentContact);
+    const localStream = await openCameraAndGetStream();
+    setLocalStream(localStream);
+    await startTransmission();
     setVideoOpen(true);
   };
 
@@ -170,9 +182,10 @@ export const Chat = () => {
         )}
         {isVideoOpen && (
           <VideoCallModal
-            getVideoStream={openCameraAndGetStream}
+            localStream={localStream}
+            remoteStream={remoteStream}
             onClose={() => {
-              closeCamera();
+              endCall();
               setVideoOpen(false);
             }}
           />
