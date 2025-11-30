@@ -19,6 +19,7 @@
     position: absolute;
     right: 20px;
     top: 20px;
+    z-index: 9;
 
     svg {
       width: 24px;
@@ -29,13 +30,27 @@
 
   .content {
     flex: 1;
-    display: flex;
+    position: relative;
 
-    video {
+    .remote-video {
+      position: absolute;
+      inset: 0;
+      width: 800px;
+      height: 800px;
+      transform: scaleX(-1);
+      border-radius: 30px;
+      pointer-events: none;
+    }
+
+    .local-video {
+      position: absolute;
+      bottom: 0;
+      left: 0;
       width: 300px;
       height: 300px;
       transform: scaleX(-1);
       border-radius: 30px;
+      pointer-events: none;
     }
   }
 }

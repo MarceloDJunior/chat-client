@@ -4,28 +4,27 @@ import { ReactComponent as CloseIcon } from '@/assets/icons/close.svg';
 import styles from './styles.module.scss';
 
 type VideoCallModalProps = {
-  getVideoStream: () => Promise<MediaStream>;
+  localStream: MediaStream | undefined;
+  remoteStream: MediaStream | undefined;
   onClose: () => void;
 };
 
 export const VideoCallModal = ({
-  getVideoStream,
+  localStream,
+  remoteStream,
   onClose,
 }: VideoCallModalProps) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const openCamera = async () => {
-      try {
-        const stream = await getVideoStream();
-        if (videoRef.current) videoRef.current.srcObject = stream;
-      } catch (e) {
-        alert('Error opening camera');
-      }
-    };
-
-    openCamera();
-  }, [getVideoStream]);
+    if (localStream && localVideoRef.current) {
+      localVideoRef.current.srcObject = localStream;
+    }
+    if (remoteStream && remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = remoteStream;
+    }
+  }, [localStream, remoteStream]);
 
   const closeVideo = () => {
     onClose();
@@ -48,7 +47,20 @@ export const VideoCallModal = ({
         </button>
       </div>
       <div className={styles.content}>
-        <video ref={videoRef} autoPlay playsInline controls={false} />
+        <video
+          className={styles['remote-video']}
+          ref={remoteVideoRef}
+          autoPlay
+          playsInline
+          controls={false}
+        />
+        <video
+          className={styles['local-video']}
+          ref={localVideoRef}
+          autoPlay
+          playsInline
+          controls={false}
+        />
       </div>
     </motion.div>
   );
