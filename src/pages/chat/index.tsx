@@ -12,7 +12,7 @@ import { MessageListSkeleton } from '@/components/skeletons/message-list';
 import { useWebSocketContext } from '@/context/websocket-context';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
 import { Contact } from '@/models/contact';
-import { useGetUser } from '@/queries/user';
+import { getUser, useGetUser } from '@/queries/user';
 import { useContactList } from './hooks/use-contact-list';
 import { useMessaging } from './hooks/use-messaging';
 import { useAttachments } from './hooks/use-attachments';
@@ -20,14 +20,26 @@ import { useChatScroll } from './hooks/use-chat-scroll';
 import styles from './styles.module.scss';
 import { VideoCallModal } from '@/components/video-call-modal';
 import { useVideoCall } from './hooks/use-video-call';
+import { Dialog } from '@/components/dialog';
+
+type VideoCallStatus =
+  | 'active'
+  | 'calling'
+  | 'receiving-call'
+  | 'rejected'
+  | 'inactive';
 
 export const Chat = () => {
   const { isMobile } = useBreakpoints();
   const messagesRef = useRef<HTMLDivElement>(null);
   const { data: user } = useGetUser();
   const { connect: connectWebSocket } = useWebSocketContext();
+
   const [currentContact, setCurrentContact] = useState<Contact | undefined>();
-  const [isVideoOpen, setVideoOpen] = useState<boolean>(false);
+  const [videoCallStatus, setVideoCallStatus] =
+    useState<VideoCallStatus>('inactive');
+  const [callingUser, setCallingUser] = useState<Contact>();
+
   const {
     distanceFromBottom,
     scrollToBottom,
@@ -70,21 +82,31 @@ export const Chat = () => {
     currentText: text,
   });
   const {
-    openCameraAndGetStream,
+    localStream,
     remoteStream,
-    startTransmission,
-    endCall,
-    setDestinationContact,
-  } = useVideoCall();
-  const [localStream, setLocalStream] = useState<MediaStream>();
+    requestVideoCall,
+    endTransmission,
+    acceptVideoCall,
+    rejectVideoCall,
+  } = useVideoCall({
+    onAcceptCall: () => {
+      console.log('Call accepted');
+      setVideoCallStatus('active');
+    },
+    onRejectCall: () => {
+      setVideoCallStatus('rejected');
+    },
+    onReceiveCall: async (userId: number) => {
+      const user = await getUser(userId);
+      setCallingUser(user);
+      setVideoCallStatus('receiving-call');
+    },
+  });
 
   const onVideoCallClick = async () => {
     if (!currentContact) return;
-    setDestinationContact(currentContact);
-    const localStream = await openCameraAndGetStream();
-    setLocalStream(localStream);
-    await startTransmission();
-    setVideoOpen(true);
+    setVideoCallStatus('calling');
+    await requestVideoCall(currentContact);
   };
 
   useEffect(() => {
@@ -92,6 +114,72 @@ export const Chat = () => {
   }, [connectWebSocket]);
 
   const isMobileConversationVisible = !!currentContact;
+
+  const renderVideoCallComponent = () => {
+    // TODO: Move all this logic to another component
+    if (videoCallStatus === 'active') {
+      return (
+        <VideoCallModal
+          localStream={localStream}
+          remoteStream={remoteStream}
+          onClose={() => {
+            endTransmission();
+            setVideoCallStatus('inactive');
+          }}
+        />
+      );
+    }
+
+    if (videoCallStatus === 'calling') {
+      return (
+        <Dialog
+          onClose={() => {
+            setVideoCallStatus('inactive');
+          }}
+        >
+          <div>Calling {currentContact?.name}...</div>
+        </Dialog>
+      );
+    }
+
+    if (videoCallStatus === 'receiving-call' && callingUser) {
+      // TODO: Add sound an better style
+      return (
+        <Dialog
+          onClose={() => {
+            setVideoCallStatus('inactive');
+          }}
+        >
+          <div>{callingUser.name} is calling you...</div>
+          <button
+            type="button"
+            onClick={() => {
+              acceptVideoCall(callingUser);
+              setVideoCallStatus('active');
+            }}
+          >
+            Accept Call
+          </button>
+          <button type="button" onClick={() => rejectVideoCall(callingUser)}>
+            Reject Call
+          </button>
+        </Dialog>
+      );
+    }
+
+    if (videoCallStatus === 'rejected') {
+      return (
+        <Dialog
+          onClose={() => {
+            setVideoCallStatus('inactive');
+          }}
+        >
+          <div>{currentContact?.name} rejected the call</div>
+        </Dialog>
+      );
+    }
+    return null;
+  };
 
   const renderChatComponents = () => {
     if (!user) {
@@ -180,16 +268,7 @@ export const Chat = () => {
         ) : (
           <h3>Select a user to start a conversation</h3>
         )}
-        {isVideoOpen && (
-          <VideoCallModal
-            localStream={localStream}
-            remoteStream={remoteStream}
-            onClose={() => {
-              endCall();
-              setVideoOpen(false);
-            }}
-          />
-        )}
+        {renderVideoCallComponent()}
       </main>
     </div>
   );

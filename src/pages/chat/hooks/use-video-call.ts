@@ -11,9 +11,30 @@ interface RTCConnectionMessage {
   data: RTCSessionDescriptionInit | RTCIceCandidate;
 }
 
+interface CallRequestMessage {
+  fromId: number;
+  toId: number;
+}
+
+interface CallResponseMessage {
+  fromId: number;
+  toId: number;
+  response: 'yes' | 'no';
+}
+
+interface VideoCallProps {
+  onAcceptCall: () => void;
+  onRejectCall: () => void;
+  onReceiveCall: (userId: number) => void;
+}
+
 let peerConnection: RTCPeerConnection;
 
-export const useVideoCall = () => {
+export const useVideoCall = ({
+  onAcceptCall,
+  onRejectCall,
+  onReceiveCall,
+}: VideoCallProps) => {
   const { socket } = useWebSocketContext();
   const { data: user } = useGetUser();
 
@@ -150,6 +171,38 @@ export const useVideoCall = () => {
     }
   }, [confirmVideoCallRequest, setAndSendLocalDescription]);
 
+  const requestVideoCall = async (contact: Contact) => {
+    if (!user?.id) return;
+    setDestinationContact(contact);
+    const data: CallRequestMessage = {
+      fromId: user.id,
+      toId: contact.id,
+    };
+    await openCameraAndGetStream();
+    socket?.emit(SocketEvent.CALL_REQUEST, JSON.stringify(data));
+  };
+
+  const acceptVideoCall = async (contact: Contact) => {
+    const data: CallResponseMessage = {
+      fromId: user?.id ?? 0,
+      toId: contact.id,
+      response: 'yes',
+    };
+    socket?.emit(SocketEvent.CALL_RESPONSE, JSON.stringify(data));
+    setDestinationContact(contact);
+    await openCameraAndGetStream();
+    await startTransmission();
+  };
+
+  const rejectVideoCall = (contact: Contact) => {
+    const data: CallResponseMessage = {
+      fromId: user?.id ?? 0,
+      toId: contact.id,
+      response: 'no',
+    };
+    socket?.emit(SocketEvent.CALL_RESPONSE, JSON.stringify(data));
+  };
+
   useEffect(() => {
     const setup = async () => {
       try {
@@ -171,6 +224,33 @@ export const useVideoCall = () => {
     shouldStartTransmission,
     user,
   ]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on(SocketEvent.CALL_RESPONSE, async (payload: string) => {
+        const data = JSON.parse(payload) as CallResponseMessage;
+        console.log('Received call response', data);
+        if (data.response === 'yes') {
+          startTransmission();
+          onAcceptCall();
+        }
+        if (data.response === 'no') {
+          onRejectCall();
+        }
+      });
+
+      socket.on(SocketEvent.CALL_REQUEST, async (payload: string) => {
+        const data = JSON.parse(payload) as CallRequestMessage;
+        console.log('Received call request', data);
+        onReceiveCall(data.fromId);
+      });
+    }
+
+    return () => {
+      socket?.off(SocketEvent.CALL_RESPONSE);
+      socket?.off(SocketEvent.CALL_REQUEST);
+    };
+  }, [onAcceptCall, onReceiveCall, onRejectCall, socket]);
 
   useEffect(() => {
     if (socket && shouldStartTransmission) {
@@ -206,9 +286,10 @@ export const useVideoCall = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket, shouldStartTransmission]);
+  // Close local camera and stop tracks
 
-  const endCall = () => {
-    // Close local camera and stop tracks
+  const endTransmission = () => {
+    // TODO: Add websocket message and UI element to indicate transmission ended
     if (localStream) {
       localStream.getTracks().forEach((track) => {
         track.stop();
@@ -228,10 +309,12 @@ export const useVideoCall = () => {
   };
 
   return {
-    openCameraAndGetStream,
-    startTransmission,
-    endCall,
+    localStream,
     remoteStream,
-    setDestinationContact,
+    startTransmission,
+    endTransmission,
+    requestVideoCall,
+    acceptVideoCall,
+    rejectVideoCall,
   };
 };
