@@ -27,7 +27,8 @@ type VideoCallStatus =
   | 'calling'
   | 'receiving-call'
   | 'rejected'
-  | 'inactive';
+  | 'inactive'
+  | 'closed';
 
 export const Chat = () => {
   const { isMobile } = useBreakpoints();
@@ -101,6 +102,9 @@ export const Chat = () => {
       setCallingUser(user);
       setVideoCallStatus('receiving-call');
     },
+    onCallClosedByUser: () => {
+      setVideoCallStatus('closed');
+    },
   });
 
   const onVideoCallClick = async () => {
@@ -147,6 +151,7 @@ export const Chat = () => {
       return (
         <Dialog
           onClose={() => {
+            rejectVideoCall(callingUser);
             setVideoCallStatus('inactive');
           }}
         >
@@ -160,7 +165,13 @@ export const Chat = () => {
           >
             Accept Call
           </button>
-          <button type="button" onClick={() => rejectVideoCall(callingUser)}>
+          <button
+            type="button"
+            onClick={() => {
+              rejectVideoCall(callingUser);
+              setVideoCallStatus('inactive');
+            }}
+          >
             Reject Call
           </button>
         </Dialog>
@@ -175,6 +186,18 @@ export const Chat = () => {
           }}
         >
           <div>{currentContact?.name} rejected the call</div>
+        </Dialog>
+      );
+    }
+
+    if (videoCallStatus === 'closed') {
+      return (
+        <Dialog
+          onClose={() => {
+            setVideoCallStatus('inactive');
+          }}
+        >
+          <div>{currentContact?.name} ended the call</div>
         </Dialog>
       );
     }
