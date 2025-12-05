@@ -21,6 +21,7 @@ import styles from './styles.module.scss';
 import { VideoCallModal } from '@/components/video-call-modal';
 import { useVideoCall } from './hooks/use-video-call';
 import { Dialog } from '@/components/dialog';
+import { CallActions } from './components/call-actions';
 
 type VideoCallStatus =
   | 'active'
@@ -109,6 +110,10 @@ export const Chat = () => {
 
   const onVideoCallClick = async () => {
     if (!currentContact) return;
+    if (currentContact.status === 'offline') {
+      alert(`${currentContact.name} is offline`);
+      return;
+    }
     setVideoCallStatus('calling');
     await requestVideoCall(currentContact);
   };
@@ -137,12 +142,19 @@ export const Chat = () => {
     if (videoCallStatus === 'calling') {
       return (
         <Dialog
-          onClose={() => {
-            setVideoCallStatus('inactive');
-          }}
-        >
-          <div>Calling {currentContact?.name}...</div>
-        </Dialog>
+          title="Video call"
+          message={`Calling ${currentContact?.name}...`}
+          buttons={[
+            {
+              text: 'Cancel',
+              onClick: () => {
+                endTransmission();
+                setVideoCallStatus('inactive');
+              },
+              variant: 'secondary',
+            },
+          ]}
+        />
       );
     }
 
@@ -150,55 +162,44 @@ export const Chat = () => {
       // TODO: Add sound an better style
       return (
         <Dialog
-          onClose={() => {
-            rejectVideoCall(callingUser);
-            setVideoCallStatus('inactive');
-          }}
-        >
-          <div>{callingUser.name} is calling you...</div>
-          <button
-            type="button"
-            onClick={() => {
-              acceptVideoCall(callingUser);
-              setVideoCallStatus('active');
-            }}
-          >
-            Accept Call
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              rejectVideoCall(callingUser);
-              setVideoCallStatus('inactive');
-            }}
-          >
-            Reject Call
-          </button>
-        </Dialog>
+          content={
+            <CallActions
+              callerName={callingUser.name}
+              onAccept={() => {
+                acceptVideoCall(callingUser);
+                setVideoCallStatus('active');
+              }}
+              onReject={() => {
+                rejectVideoCall(callingUser);
+                setVideoCallStatus('inactive');
+              }}
+            />
+          }
+        />
       );
     }
 
     if (videoCallStatus === 'rejected') {
       return (
         <Dialog
+          title="Video call"
+          message={`${currentContact?.name} rejected the call`}
           onClose={() => {
             setVideoCallStatus('inactive');
           }}
-        >
-          <div>{currentContact?.name} rejected the call</div>
-        </Dialog>
+        />
       );
     }
 
     if (videoCallStatus === 'closed') {
       return (
         <Dialog
+          title="Video call"
+          message={`${currentContact?.name} ended the call`}
           onClose={() => {
             setVideoCallStatus('inactive');
           }}
-        >
-          <div>{currentContact?.name} ended the call</div>
-        </Dialog>
+        />
       );
     }
     return null;
