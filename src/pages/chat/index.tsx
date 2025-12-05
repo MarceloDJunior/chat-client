@@ -10,6 +10,7 @@ import { SendAttachmentModal } from '@/components/send-attachment-modal';
 import { SendMessageField } from '@/components/send-message-field';
 import { MessageListSkeleton } from '@/components/skeletons/message-list';
 import { useWebSocketContext } from '@/context/websocket-context';
+import { useDialog } from '@/context/dialog-context';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
 import { Contact } from '@/models/contact';
 import { getUser, useGetUser } from '@/queries/user';
@@ -36,6 +37,7 @@ export const Chat = () => {
   const messagesRef = useRef<HTMLDivElement>(null);
   const { data: user } = useGetUser();
   const { connect: connectWebSocket } = useWebSocketContext();
+  const { showDialog } = useDialog();
 
   const [currentContact, setCurrentContact] = useState<Contact | undefined>();
   const [videoCallStatus, setVideoCallStatus] =
@@ -111,7 +113,7 @@ export const Chat = () => {
   const onVideoCallClick = async () => {
     if (!currentContact) return;
     if (currentContact.status === 'offline') {
-      alert(`${currentContact.name} is offline`);
+      showDialog('User Offline', `${currentContact.name} is offline`);
       return;
     }
     setVideoCallStatus('calling');
