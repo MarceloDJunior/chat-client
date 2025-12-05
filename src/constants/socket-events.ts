@@ -9,4 +9,5 @@ export enum SocketEvent {
   CALL_REQUEST = 'callRequest',
   CALL_RESPONSE = 'callResponse',
   CALL_END = 'callEnd',
+  CALL_MEDIA_STATE = 'callMediaState',
 }

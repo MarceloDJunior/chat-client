@@ -86,12 +86,14 @@ export const Chat = () => {
     currentText: text,
   });
   const {
-    localStream,
-    remoteStream,
+    localStreamState,
+    remoteStreamState,
     requestVideoCall,
     endTransmission,
     acceptVideoCall,
     rejectVideoCall,
+    toggleVideo,
+    toggleAudio,
   } = useVideoCall({
     onAcceptCall: () => {
       console.log('Call accepted');
@@ -131,8 +133,12 @@ export const Chat = () => {
     if (videoCallStatus === 'active') {
       return (
         <VideoCallModal
-          localStream={localStream}
-          remoteStream={remoteStream}
+          localStreamState={localStreamState}
+          remoteStreamState={remoteStreamState}
+          currentUser={user}
+          remoteUser={currentContact}
+          onToggleVideo={toggleVideo}
+          onToggleAudio={toggleAudio}
           onClose={() => {
             endTransmission();
             setVideoCallStatus('inactive');

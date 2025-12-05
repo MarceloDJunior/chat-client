@@ -22,6 +22,13 @@ interface CallResponseMessage {
   response: 'yes' | 'no';
 }
 
+interface CallMediaState {
+  fromId: number;
+  toId: number;
+  video: boolean;
+  audio: boolean;
+}
+
 interface VideoCallProps {
   onAcceptCall: () => void;
   onRejectCall: () => void;
@@ -45,6 +52,12 @@ export const useVideoCall = ({
   const [destinationContact, setDestinationContact] = useState<Contact>();
   const [shouldStartTransmission, setShouldStartTransmission] =
     useState<boolean>(false);
+  const [isLocalVideoEnabled, setIsLocalVideoEnabled] = useState(true);
+  const [isLocalAudioEnabled, setIsLocalAudioEnabled] = useState(true);
+  const [isDestinationVideoEnabled, setIsDestinationVideoEnabled] =
+    useState(true);
+  const [isDestinationAudioEnabled, setIsDestinationAudioEnabled] =
+    useState(true);
 
   const openCameraAndGetStream = async () => {
     async function getConnectedDevices(type: string) {
@@ -273,12 +286,22 @@ export const useVideoCall = ({
         closeConnection();
         onCallClosedByUser(data.fromId);
       });
+
+      socket.on(SocketEvent.CALL_MEDIA_STATE, (payload: string) => {
+        const data = JSON.parse(payload) as CallMediaState;
+        console.log('Received call media state', data);
+        if (data.toId == user?.id) {
+          setIsDestinationAudioEnabled(!!data.audio);
+          setIsDestinationVideoEnabled(!!data.video);
+        }
+      });
     }
 
     return () => {
       socket?.off(SocketEvent.CALL_RESPONSE);
       socket?.off(SocketEvent.CALL_REQUEST);
       socket?.off(SocketEvent.CALL_END);
+      socket?.off(SocketEvent.CALL_MEDIA_STATE);
     };
   }, [
     closeConnection,
@@ -326,6 +349,25 @@ export const useVideoCall = ({
   }, [socket, shouldStartTransmission]);
   // Close local camera and stop tracks
 
+  useEffect(() => {
+    // Send update on media status changes
+    if (user && destinationContact) {
+      const data: CallMediaState = {
+        fromId: user.id,
+        toId: destinationContact.id,
+        audio: isLocalAudioEnabled,
+        video: isLocalVideoEnabled,
+      };
+      socket?.emit(SocketEvent.CALL_MEDIA_STATE, JSON.stringify(data));
+    }
+  }, [
+    isLocalVideoEnabled,
+    isLocalAudioEnabled,
+    user,
+    destinationContact,
+    socket,
+  ]);
+
   const endTransmission = () => {
     const data: CallRequestMessage = {
       fromId: user?.id ?? 0,
@@ -336,13 +378,43 @@ export const useVideoCall = ({
     closeConnection();
   };
 
+  const toggleVideo = useCallback(() => {
+    if (localStream) {
+      const videoTrack = localStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setIsLocalVideoEnabled(videoTrack.enabled);
+      }
+    }
+  }, [localStream]);
+
+  const toggleAudio = useCallback(() => {
+    if (localStream) {
+      const audioTrack = localStream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsLocalAudioEnabled(audioTrack.enabled);
+      }
+    }
+  }, [localStream]);
+
   return {
-    localStream,
-    remoteStream,
+    localStreamState: {
+      stream: localStream,
+      isVideoEnabled: isLocalVideoEnabled,
+      isAudioEnabled: isLocalAudioEnabled,
+    },
+    remoteStreamState: {
+      stream: remoteStream,
+      isVideoEnabled: isDestinationVideoEnabled,
+      isAudioEnabled: isDestinationAudioEnabled,
+    },
     startTransmission,
     endTransmission,
     requestVideoCall,
     acceptVideoCall,
     rejectVideoCall,
+    toggleVideo,
+    toggleAudio,
   };
 };
