@@ -7,6 +7,8 @@ import {
   AUTH0_DOMAIN,
 } from '@/config/environment';
 import { WebSocketProvider } from '@/context/websocket-context';
+import { DialogProvider } from '@/context/dialog-context';
+import { DialogManager } from '@/components/dialog-manager';
 import { RouterProvider } from './router';
 
 const queryClient = new QueryClient();
@@ -24,7 +26,10 @@ const App = () => {
       >
         <CookiesProvider>
           <WebSocketProvider>
-            <RouterProvider />
+            <DialogProvider>
+              <RouterProvider />
+              <DialogManager />
+            </DialogProvider>
           </WebSocketProvider>
         </CookiesProvider>
       </Auth0Provider>
