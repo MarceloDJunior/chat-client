@@ -264,7 +264,7 @@ export const useVideoCall = ({
       socket.on(SocketEvent.CALL_REQUEST, (payload: string) => {
         const data = JSON.parse(payload) as CallRequestMessage;
         console.log('Received call request', data);
-        onReceiveCall(data.fromId);
+        if (data.toId === user?.id) onReceiveCall(data.fromId);
       });
 
       socket.on(SocketEvent.CALL_END, (payload: string) => {
@@ -287,6 +287,7 @@ export const useVideoCall = ({
     onReceiveCall,
     onRejectCall,
     socket,
+    user?.id,
   ]);
 
   useEffect(() => {
