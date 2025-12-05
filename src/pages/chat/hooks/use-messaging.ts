@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import ReceivedMessageSound from '@/assets/sounds/received-message.mp3';
-import SentMessageSound from '@/assets/sounds/sent-message.mp3';
 import { LAST_CONTACT_ID } from '@/constants/cookies';
 import { useWebSocketContext } from '@/context/websocket-context';
 import { CookiesHelper } from '@/helpers/cookies';
@@ -17,12 +15,12 @@ import { useTabActive } from '@/hooks/use-tab-active';
 import { useGetUser } from '@/queries/user';
 import { MediaHelper } from '@/helpers/media';
 import { SocketEvent } from '@/constants/socket-events';
+import {
+  receivedMessageSound,
+  sentMessageSound,
+} from '@/hooks/use-audio-unlock';
 
 let lastMessageId: number;
-const receivedMessageSound = new Audio(ReceivedMessageSound);
-receivedMessageSound.muted = true;
-const sentMessageSound = new Audio(SentMessageSound);
-sentMessageSound.muted = true;
 
 const generateUniqueId = () =>
   new Date().getTime() + Math.floor(Math.random() * 1000);
@@ -225,24 +223,6 @@ export const useMessaging = ({
     const lastMessage = messages[0];
     return lastMessage;
   }, [messages]);
-
-  useEffect(() => {
-    // Unlock audio on the first user interaction
-    window.addEventListener(
-      'click',
-      () => {
-        receivedMessageSound.play().then(() => {
-          receivedMessageSound.pause();
-          receivedMessageSound.muted = false;
-        });
-        sentMessageSound.play().then(() => {
-          sentMessageSound.pause();
-          sentMessageSound.muted = false;
-        });
-      },
-      { once: true },
-    ); // The listener is removed after one execution
-  }, []);
 
   useEffect(() => {
     const resetChat = () => {

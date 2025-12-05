@@ -9,11 +9,14 @@ import {
 import { WebSocketProvider } from '@/context/websocket-context';
 import { DialogProvider } from '@/context/dialog-context';
 import { DialogManager } from '@/components/dialog-manager';
+import { useAudioUnlock } from '@/hooks/use-audio-unlock';
 import { RouterProvider } from './router';
 
 const queryClient = new QueryClient();
 
 const App = () => {
+  useAudioUnlock();
+
   return (
     <QueryClientProvider client={queryClient}>
       <Auth0Provider
