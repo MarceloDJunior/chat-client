@@ -11,6 +11,7 @@ import { DialogProvider } from '@/context/dialog-context';
 import { DialogManager } from '@/components/dialog-manager';
 import { useAudioUnlock } from '@/hooks/use-audio-unlock';
 import { RouterProvider } from './router';
+import { VideoCallProvider } from './context/video-call-context';
 
 const queryClient = new QueryClient();
 
@@ -29,10 +30,12 @@ const App = () => {
       >
         <CookiesProvider>
           <WebSocketProvider>
-            <DialogProvider>
-              <RouterProvider />
-              <DialogManager />
-            </DialogProvider>
+            <VideoCallProvider>
+              <DialogProvider>
+                <RouterProvider />
+                <DialogManager />
+              </DialogProvider>
+            </VideoCallProvider>
           </WebSocketProvider>
         </CookiesProvider>
       </Auth0Provider>

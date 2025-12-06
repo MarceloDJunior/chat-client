@@ -11,27 +11,16 @@ import { SendMessageField } from '@/components/send-message-field';
 import { MessageListSkeleton } from '@/components/skeletons/message-list';
 import { useWebSocketContext } from '@/context/websocket-context';
 import { useDialog } from '@/context/dialog-context';
+import { useVideoCallContext } from '@/context/video-call-context';
 import { useBreakpoints } from '@/hooks/use-breakpoints';
 import { Contact } from '@/models/contact';
-import { getUser, useGetUser } from '@/queries/user';
+import { useGetUser } from '@/queries/user';
 import { useContactList } from './hooks/use-contact-list';
 import { useMessaging } from './hooks/use-messaging';
 import { useAttachments } from './hooks/use-attachments';
 import { useChatScroll } from './hooks/use-chat-scroll';
 import styles from './styles.module.scss';
-import { VideoCallModal } from '@/components/video-call-modal';
-import { useVideoCall } from './hooks/use-video-call';
-import { Dialog } from '@/components/dialog';
-import { CallActions } from './components/call-actions';
-
-type VideoCallStatus =
-  | 'active'
-  | 'calling'
-  | 'receiving-call'
-  | 'rejected'
-  | 'inactive'
-  | 'closed-user'
-  | 'closed-disconnected';
+import { VideoCall } from './components/video-call';
 
 export const Chat = () => {
   const { isMobile } = useBreakpoints();
@@ -39,11 +28,9 @@ export const Chat = () => {
   const { data: user } = useGetUser();
   const { connect: connectWebSocket } = useWebSocketContext();
   const { showDialog } = useDialog();
+  const { startCall } = useVideoCallContext();
 
   const [currentContact, setCurrentContact] = useState<Contact | undefined>();
-  const [videoCallStatus, setVideoCallStatus] =
-    useState<VideoCallStatus>('inactive');
-  const [callingUser, setCallingUser] = useState<Contact>();
 
   const {
     distanceFromBottom,
@@ -86,35 +73,6 @@ export const Chat = () => {
   const { attachments, updateAttachments, removeAttachments } = useAttachments({
     currentText: text,
   });
-  const {
-    localStreamState,
-    remoteStreamState,
-    requestVideoCall,
-    endTransmission,
-    acceptVideoCall,
-    rejectVideoCall,
-    toggleVideo,
-    toggleAudio,
-  } = useVideoCall({
-    onAcceptCall: () => {
-      console.log('Call accepted');
-      setVideoCallStatus('active');
-    },
-    onRejectCall: () => {
-      setVideoCallStatus('rejected');
-    },
-    onReceiveCall: async (userId: number) => {
-      const user = await getUser(userId);
-      setCallingUser(user);
-      setVideoCallStatus('receiving-call');
-    },
-    onCallClosedByUser: () => {
-      setVideoCallStatus('closed-user');
-    },
-    onCallDisconnected: () => {
-      setVideoCallStatus('closed-disconnected');
-    },
-  });
 
   const onVideoCallClick = async () => {
     if (!currentContact) return;
@@ -122,8 +80,7 @@ export const Chat = () => {
       showDialog('User Offline', `${currentContact.name} is offline`);
       return;
     }
-    setVideoCallStatus('calling');
-    await requestVideoCall(currentContact);
+    await startCall(currentContact);
   };
 
   useEffect(() => {
@@ -131,103 +88,6 @@ export const Chat = () => {
   }, [connectWebSocket]);
 
   const isMobileConversationVisible = !!currentContact;
-
-  const renderVideoCallComponent = () => {
-    // TODO: Move all this logic to another component
-    if (videoCallStatus === 'active') {
-      return (
-        <VideoCallModal
-          localStreamState={localStreamState}
-          remoteStreamState={remoteStreamState}
-          currentUser={user}
-          remoteUser={currentContact}
-          onToggleVideo={toggleVideo}
-          onToggleAudio={toggleAudio}
-          onClose={() => {
-            endTransmission();
-            setVideoCallStatus('inactive');
-          }}
-        />
-      );
-    }
-
-    if (videoCallStatus === 'calling') {
-      return (
-        <Dialog
-          title="Video call"
-          message={`Calling ${currentContact?.name}...`}
-          buttons={[
-            {
-              text: 'Cancel',
-              onClick: () => {
-                endTransmission();
-                setVideoCallStatus('inactive');
-              },
-              variant: 'secondary',
-            },
-          ]}
-        />
-      );
-    }
-
-    if (videoCallStatus === 'receiving-call' && callingUser) {
-      // TODO: Add sound an better style
-      return (
-        <Dialog
-          content={
-            <CallActions
-              callerName={callingUser.name}
-              onAccept={() => {
-                acceptVideoCall(callingUser);
-                setVideoCallStatus('active');
-              }}
-              onReject={() => {
-                rejectVideoCall(callingUser);
-                setVideoCallStatus('inactive');
-              }}
-            />
-          }
-        />
-      );
-    }
-
-    if (videoCallStatus === 'rejected') {
-      return (
-        <Dialog
-          title="Video call"
-          message={`${currentContact?.name} rejected the call`}
-          onClose={() => {
-            setVideoCallStatus('inactive');
-          }}
-        />
-      );
-    }
-
-    if (videoCallStatus === 'closed-user') {
-      return (
-        <Dialog
-          title="Video call"
-          message={`${currentContact?.name} ended the call`}
-          onClose={() => {
-            setVideoCallStatus('inactive');
-          }}
-        />
-      );
-    }
-
-    if (videoCallStatus === 'closed-disconnected') {
-      return (
-        <Dialog
-          title="Video call"
-          message={`${currentContact?.name} has been disconnected`}
-          onClose={() => {
-            setVideoCallStatus('inactive');
-          }}
-        />
-      );
-    }
-    return null;
-  };
 
   const renderChatComponents = () => {
     if (!user) {
@@ -316,7 +176,7 @@ export const Chat = () => {
         ) : (
           <h3>Select a user to start a conversation</h3>
         )}
-        {renderVideoCallComponent()}
+        <VideoCall />
       </main>
     </div>
   );
