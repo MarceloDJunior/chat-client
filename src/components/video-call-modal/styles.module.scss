@@ -111,9 +111,9 @@
     }
 
     .local-video-container {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 200px;
       height: 150px;
       border-radius: 12px;
@@ -121,12 +121,12 @@
       overflow: hidden;
       background-color: var(--color-bg-button);
       box-shadow: 0 4px 12px var(--color-overlay-light-alt);
+      cursor: move;
+      z-index: 10;
 
       @include breakpoints.sm {
         width: 240px;
         height: 180px;
-        bottom: 24px;
-        right: 24px;
       }
 
       .local-video {

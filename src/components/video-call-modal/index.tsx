@@ -6,6 +6,8 @@ import { ReactComponent as MicOffIcon } from '@/assets/icons/mic-off.svg';
 import { ReactComponent as VideoIcon } from '@/assets/icons/video.svg';
 import { ReactComponent as VideoOffIcon } from '@/assets/icons/video-off.svg';
 import type { User } from '@/models/user';
+import { DraggableSnapToEdge } from '@/components/draggable-snap-to-edge';
+import { useBreakpoints } from '@/hooks/use-breakpoints';
 import styles from './styles.module.scss';
 
 type StreamState = {
@@ -35,6 +37,7 @@ export const VideoCallModal = ({
 }: VideoCallModalProps) => {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const { isMobile } = useBreakpoints();
 
   const {
     stream: localStream,
@@ -43,6 +46,9 @@ export const VideoCallModal = ({
   } = localStreamState;
   const { stream: remoteStream, isVideoEnabled: isRemoteVideoEnabled } =
     remoteStreamState;
+
+  const videoWidth = isMobile ? 200 : 240;
+  const videoHeight = isMobile ? 150 : 180;
 
   useEffect(() => {
     if (localStream && localVideoRef.current) {
@@ -96,7 +102,11 @@ export const VideoCallModal = ({
             <MicOffIcon />
           </div>
         )}
-        <div className={styles['local-video-container']}>
+        <DraggableSnapToEdge
+          className={styles['local-video-container']}
+          width={videoWidth}
+          height={videoHeight}
+        >
           <video
             className={styles['local-video']}
             ref={localVideoRef}
@@ -120,7 +130,7 @@ export const VideoCallModal = ({
               )}
             </div>
           )}
-        </div>
+        </DraggableSnapToEdge>
         <div className={styles.controls}>
           <div className={styles['left-controls']}>
             <button
