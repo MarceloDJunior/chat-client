@@ -74,7 +74,7 @@
   color: var(--color-status-error);
 
   &:hover {
-    background-color: var(--color-error-overlay);
+    background-color: var(--color-error-overlay-hover);
   }
 }
 
@@ -83,6 +83,6 @@
   color: var(--color-status-online);
 
   &:hover {
-    background-color: var(--color-success-overlay);
+    background-color: var(--color-success-overlay-hover);
   }
 }
