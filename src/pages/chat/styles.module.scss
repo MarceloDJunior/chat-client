@@ -27,7 +27,7 @@
     flex: 1;
     overflow: hidden;
     padding: 8px 8px;
-    background-color: #181e2d;
+    background-color: var(--color-bg-secondary);
     display: flex;
     flex-direction: column;
 
@@ -58,9 +58,9 @@
 
     .contact-header {
       padding: 24px 20px;
-      background-color: #1c2437;
+      background-color: var(--color-bg-secondary);
       border-radius: 8px;
-      box-shadow: -1px 6px 18px -7px rgba(15, 15, 15, 0.403);
+      box-shadow: -1px 6px 18px -7px var(--color-overlay-medium);
     }
 
     .chat {

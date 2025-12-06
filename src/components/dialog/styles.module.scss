@@ -7,12 +7,12 @@
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
-  background: #1e2433;
+  background: var(--color-bg-secondary);
   z-index: 3;
   border-radius: 12px;
   min-width: 360px;
   max-width: 90vw;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 20px 40px var(--color-overlay-medium);
   overflow: hidden;
 
   @include breakpoints.sm {
@@ -22,8 +22,8 @@
 
   .header {
     padding: 14px 24px;
-    background: rgba(255, 255, 255, 0.02);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    background: var(--color-white-overlay-subtle);
+    border-bottom: 1px solid var(--color-white-overlay-subtle);
 
     @include breakpoints.sm {
       padding: 16px 28px;
@@ -33,7 +33,7 @@
   .title {
     font-size: 17px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.95);
+    color: var(--color-white-overlay-stronger);
     margin: 0;
     letter-spacing: -0.01em;
 
@@ -52,7 +52,7 @@
 
   .message {
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-white-overlay-strong);
     margin: 0;
     line-height: 1.6;
 
@@ -88,31 +88,31 @@
     }
 
     .button-secondary {
-      background-color: rgba(255, 255, 255, 0.08);
-      color: rgba(255, 255, 255, 0.85);
+      background-color: var(--color-white-overlay-subtle);
+      color: var(--color-white-overlay-stronger);
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.12);
+        background-color: var(--color-white-overlay-light);
       }
     }
 
     .button-primary {
-      background-color: #5b7ce6;
-      color: #ffffff;
+      background-color: var(--color-primary-hover);
+      color: var(--color-text-primary);
 
       &:hover {
-        background-color: #4a6dd4;
+        background-color: var(--color-primary-hover);
       }
     }
   }
 
   .button-close {
     background-color: transparent;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--color-white-overlay-strong);
 
     &:hover {
-      background-color: rgba(255, 255, 255, 0.05);
-      color: rgba(255, 255, 255, 0.8);
+      background-color: var(--color-white-overlay-subtle);
+      color: var(--color-white-overlay-strong);
     }
   }
 }

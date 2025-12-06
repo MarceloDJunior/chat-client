@@ -3,7 +3,7 @@
 .container {
   display: flex;
   padding: 12px;
-  background-color: #1c2437;
+  background-color: var(--color-bg-secondary);
   border-radius: 8px;
 
   @include breakpoints.sm {
@@ -17,7 +17,7 @@
     height: 48px;
     font-size: 16px;
     border-radius: 8px;
-    background-color: #283045;
+    background-color: var(--color-bg-tertiary);
     border: none;
     width: 100%;
 
@@ -47,7 +47,7 @@
     svg {
       width: 24px;
       height: 24px;
-      color: #939393;
+      color: var(--color-text-gray-dark);
     }
   }
 }

@@ -1,10 +1,12 @@
+@import './colors.scss';
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color: #ffffff;
-  background-color: #171c28;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -22,12 +24,12 @@ body,
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--color-link);
   text-decoration: inherit;
 }
 
 a:hover {
-  color: #535bf2;
+  color: var(--color-link-hover);
 }
 
 * {
@@ -48,7 +50,7 @@ h1 {
 
 button,
 input {
-  color: #e3e3e3;
+  color: var(--color-text-secondary);
 }
 
 button {
@@ -58,12 +60,12 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--color-bg-button);
   cursor: pointer;
   transition: border-color 0.25s, opacity 0.25s;
 
   &:not(:disabled):hover {
-    border-color: #646cff;
+    border-color: var(--color-link);
   }
 
   &:not(:disabled):focus,
@@ -91,11 +93,11 @@ button {
 }
 
 ::-webkit-scrollbar-track {
-  background: #434343;
+  background: var(--color-scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  border: 2px solid #434343;
-  background: #a0a0a0;
+  border: 2px solid var(--color-scrollbar-track);
+  background: var(--color-scrollbar-thumb);
   border-radius: 10px;
 }

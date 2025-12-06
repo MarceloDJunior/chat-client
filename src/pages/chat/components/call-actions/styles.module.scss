@@ -14,7 +14,7 @@
 
 .message {
   font-size: 18px;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--color-white-overlay-stronger);
   margin: 0;
   text-align: center;
   line-height: 1.5;
@@ -70,19 +70,19 @@
 }
 
 .reject-button {
-  background-color: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  background-color: var(--color-error-overlay);
+  color: var(--color-status-error);
 
   &:hover {
-    background-color: rgba(239, 68, 68, 0.25);
+    background-color: var(--color-error-overlay);
   }
 }
 
 .accept-button {
-  background-color: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
+  background-color: var(--color-success-overlay);
+  color: var(--color-status-online);
 
   &:hover {
-    background-color: rgba(34, 197, 94, 0.25);
+    background-color: var(--color-success-overlay);
   }
 }
