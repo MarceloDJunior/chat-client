@@ -221,7 +221,6 @@ export const useVideoCall = ({
   };
 
   const closeConnection = useCallback(() => {
-    // TODO: Add websocket message and UI element to indicate transmission ended
     if (localStream) {
       localStream.getTracks().forEach((track) => {
         track.stop();
@@ -327,9 +326,6 @@ export const useVideoCall = ({
           peerConnection.setRemoteDescription(
             new RTCSessionDescription(sessionDescription),
           );
-          // Setup handlers and add tracks before responding
-          // TODO: Implement logic to answer yes or no before confirming
-          // For now, both need to click on the video icon to have a call
           await confirmVideoCallRequest();
         }
         if (data.type === 'answer') {
