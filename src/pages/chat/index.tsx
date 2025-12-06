@@ -30,7 +30,8 @@ type VideoCallStatus =
   | 'receiving-call'
   | 'rejected'
   | 'inactive'
-  | 'closed';
+  | 'closed-user'
+  | 'closed-disconnected';
 
 export const Chat = () => {
   const { isMobile } = useBreakpoints();
@@ -108,7 +109,10 @@ export const Chat = () => {
       setVideoCallStatus('receiving-call');
     },
     onCallClosedByUser: () => {
-      setVideoCallStatus('closed');
+      setVideoCallStatus('closed-user');
+    },
+    onCallDisconnected: () => {
+      setVideoCallStatus('closed-disconnected');
     },
   });
 
@@ -199,11 +203,23 @@ export const Chat = () => {
       );
     }
 
-    if (videoCallStatus === 'closed') {
+    if (videoCallStatus === 'closed-user') {
       return (
         <Dialog
           title="Video call"
           message={`${currentContact?.name} ended the call`}
+          onClose={() => {
+            setVideoCallStatus('inactive');
+          }}
+        />
+      );
+    }
+
+    if (videoCallStatus === 'closed-disconnected') {
+      return (
+        <Dialog
+          title="Video call"
+          message={`${currentContact?.name} has been disconnected`}
           onClose={() => {
             setVideoCallStatus('inactive');
           }}

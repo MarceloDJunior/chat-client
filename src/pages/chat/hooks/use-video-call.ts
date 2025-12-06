@@ -34,6 +34,7 @@ interface VideoCallProps {
   onRejectCall: () => void;
   onReceiveCall: (userId: number) => void;
   onCallClosedByUser: (userId: number) => void;
+  onCallDisconnected: (userId: number) => void;
 }
 
 let peerConnection: RTCPeerConnection;
@@ -43,6 +44,7 @@ export const useVideoCall = ({
   onRejectCall,
   onReceiveCall,
   onCallClosedByUser,
+  onCallDisconnected,
 }: VideoCallProps) => {
   const { socket } = useWebSocketContext();
   const { data: user } = useGetUser();
@@ -397,6 +399,39 @@ export const useVideoCall = ({
       }
     }
   }, [localStream]);
+
+  // Monitor remote stream and disconnect if no data received
+  useEffect(() => {
+    if (!remoteStream || !peerConnection) return;
+
+    let lastBytes = 0;
+    let noDataCount = 0;
+
+    const interval = setInterval(async () => {
+      const stats = await peerConnection.getStats();
+      let bytes = 0;
+
+      stats.forEach((report) => {
+        if (report.type === 'inbound-rtp') bytes += report.bytesReceived || 0;
+      });
+
+      if (bytes > lastBytes) {
+        noDataCount = 0;
+      } else if (++noDataCount >= 3) {
+        closeConnection();
+        onCallDisconnected(destinationContact?.id ?? 0);
+      }
+
+      lastBytes = bytes;
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [
+    remoteStream,
+    closeConnection,
+    onCallDisconnected,
+    destinationContact?.id,
+  ]);
 
   return {
     localStreamState: {
